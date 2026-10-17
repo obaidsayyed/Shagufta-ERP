@@ -1,0 +1,20 @@
+# Supabase CLI configuration
+project_id = "hotel-order-management"
+
+[api]
+port = 54321
+extra_search_path = ["public", "extensions"]
+
+[db]
+port = 54322
+
+[studio]
+port = 54323
+
+[auth]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173/**"]
+
+[edge_runtime]
+enabled = true
+port = 54324
