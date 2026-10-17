@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SoundProvider } from './context/SoundContext';
 import { Navbar } from './components/common/Navbar';
@@ -11,24 +11,12 @@ import { CounterView } from './components/counter/CounterView';
 
 const MainApp: React.FC = () => {
   const { currentStaff, role, isAuthenticated } = useAuth();
-  const [activeView, setActiveView] = useState<'counter' | 'waiter' | 'kitchen'>('counter');
   const [counterTab, setCounterTab] = useState<'sessions' | 'history' | 'analytics' | 'menu' | 'tables' | 'staff'>('sessions');
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     const saved = localStorage.getItem('hotel_erp_sidebar_open');
     return saved !== null ? saved === 'true' : true;
   });
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-
-  // Sync active view based on authenticated role
-  useEffect(() => {
-    if (role === 'waiter') {
-      setActiveView('waiter');
-    } else if (role === 'chef') {
-      setActiveView('kitchen');
-    } else if (role === 'admin') {
-      setActiveView((prev) => prev || 'counter');
-    }
-  }, [role]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => {
@@ -44,15 +32,13 @@ const MainApp: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'row', backgroundColor: 'var(--bg-page)' }}>
-      {/* Collapsible Sidebar - Can collapse totally to give full space to components */}
+      {/* Collapsible Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
         setIsOpen={(open) => {
           setIsSidebarOpen(open);
           localStorage.setItem('hotel_erp_sidebar_open', String(open));
         }}
-        activeView={activeView}
-        setActiveView={setActiveView}
         counterTab={counterTab}
         setCounterTab={setCounterTab}
         onOpenProfile={() => setIsProfileOpen(true)}
@@ -61,26 +47,19 @@ const MainApp: React.FC = () => {
       {/* Main Workspace */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflowY: 'auto' }}>
         <Navbar
-          activeView={activeView}
-          setActiveView={setActiveView}
           isSidebarOpen={isSidebarOpen}
           onToggleSidebar={toggleSidebar}
           onOpenProfile={() => setIsProfileOpen(true)}
         />
 
         <main className="layout-main" style={{ flex: 1, width: '100%', padding: '16px' }}>
+          {/* User sees strictly their role's terminal */}
           {role === 'waiter' && <WaiterView />}
 
           {role === 'chef' && <KitchenView />}
 
           {role === 'admin' && (
-            <>
-              {activeView === 'counter' && (
-                <CounterView activeTab={counterTab} setActiveTab={setCounterTab} />
-              )}
-              {activeView === 'waiter' && <WaiterView />}
-              {activeView === 'kitchen' && <KitchenView />}
-            </>
+            <CounterView activeTab={counterTab} setActiveTab={setCounterTab} />
           )}
         </main>
       </div>

@@ -316,77 +316,92 @@ export const WaiterView: React.FC = () => {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
               {filteredDishes.map((dish) => {
-              const qtyInCart = cart[dish.id] || 0;
-              const isAvailable = dish.is_available;
-              return (
-                <div
-                  key={dish.id}
-                  className="panel"
-                  style={{
-                    padding: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    opacity: isAvailable ? 1 : 0.6,
-                    border: qtyInCart > 0 ? '1px solid var(--accent)' : '1px solid var(--border-subtle)',
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '4px' }}>
-                      <span style={{ fontWeight: 600, fontSize: '13px' }}>{dish.name}</span>
-                      {!isAvailable && (
-                        <span className="badge badge-danger" style={{ fontSize: '9px', padding: '1px 4px' }}>
-                          Unavailable
+                const qtyInCart = cart[dish.id] || 0;
+                const isAvailable = dish.is_available;
+                return (
+                  <div
+                    key={dish.id}
+                    className="item-grid-card"
+                    style={{
+                      backgroundColor: '#FFFFFF',
+                      color: '#0F172A',
+                      border: qtyInCart > 0 ? '2px solid var(--primary-action)' : '1px solid #E2E8F0',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      opacity: isAvailable ? 1 : 0.6,
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '4px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '14px', color: '#0F172A', lineHeight: 1.3 }}>
+                          {dish.name}
                         </span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
-                      {formatPaiseToINR(dish.price_paise)}
-                    </div>
-                  </div>
+                        {!isAvailable && (
+                          <span className="badge badge-danger" style={{ fontSize: '9px', padding: '1px 4px' }}>
+                            Unavailable
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>
+                        {formatPaiseToINR(dish.price_paise)}
+                      </div>
 
-                  {/* Add / Quantity Controller */}
-                  <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
-                    {qtyInCart > 0 ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <button
-                          type="button"
-                          className="btn-secondary btn-sm"
-                          style={{ width: '28px', height: '28px', padding: 0 }}
-                          onClick={() => removeFromCart(dish.id)}
-                        >
-                          <Minus size={13} />
-                        </button>
-                        <span style={{ fontWeight: 700, minWidth: '20px', textAlign: 'center' }}>
-                          {qtyInCart}
+                      {/* Quick Modifiers / Add-on Accents (Spicy Amber Yellow) */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+                        <span className="modifier-chip" title="Add special modifier note">
+                          Extra Gravy
                         </span>
+                        <span className="modifier-chip" title="Add special modifier note">
+                          Spicy
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Add / Quantity Controller */}
+                    <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                      {qtyInCart > 0 ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <button
+                            type="button"
+                            className="btn-secondary btn-sm"
+                            style={{ width: '28px', height: '28px', padding: 0, backgroundColor: '#F1F5F9', color: '#0F172A', border: '1px solid #CBD5E1' }}
+                            onClick={() => removeFromCart(dish.id)}
+                          >
+                            <Minus size={13} />
+                          </button>
+                          <span style={{ fontWeight: 800, minWidth: '22px', textAlign: 'center', color: '#0F172A', fontSize: '14px' }}>
+                            {qtyInCart}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn-primary btn-sm"
+                            style={{ width: '28px', height: '28px', padding: 0 }}
+                            onClick={() => addToCart(dish.id)}
+                            disabled={!isAvailable}
+                          >
+                            <Plus size={13} />
+                          </button>
+                        </div>
+                      ) : (
                         <button
                           type="button"
                           className="btn-primary btn-sm"
-                          style={{ width: '28px', height: '28px', padding: 0 }}
                           onClick={() => addToCart(dish.id)}
                           disabled={!isAvailable}
+                          style={{ width: '100%', minHeight: '32px' }}
                         >
                           <Plus size={13} />
+                          Add Item
                         </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        className="btn-secondary btn-sm"
-                        onClick={() => addToCart(dish.id)}
-                        disabled={!isAvailable}
-                        style={{ width: '100%' }}
-                      >
-                        <Plus size={13} />
-                        Add
-                      </button>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
           )}
         </div>
 
@@ -395,8 +410,8 @@ export const WaiterView: React.FC = () => {
           <div className="panel" style={{ position: 'sticky', top: '64px' }}>
             <div className="panel-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <ShoppingBag size={16} color="var(--accent)" />
-                <h3>Order For {selectedTable?.table_number || 'Table'}</h3>
+                <ShoppingBag size={16} color="var(--primary-action)" />
+                <h3 style={{ color: 'var(--text-primary)' }}>Order For {selectedTable?.table_number || 'Table'}</h3>
               </div>
               {totalCartQty > 0 && (
                 <button type="button" className="btn-secondary btn-sm" onClick={clearCart} style={{ border: 'none', color: 'var(--text-muted)' }}>
@@ -421,13 +436,13 @@ export const WaiterView: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '6px 0',
+                        padding: '8px 0',
                         borderBottom: '1px solid var(--border-subtle)',
                         fontSize: '13px',
                       }}
                     >
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600 }}>{item!.name}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item!.name}</div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                           {formatPaiseToINR(item!.price_paise)} × {quantity}
                         </div>
@@ -443,7 +458,7 @@ export const WaiterView: React.FC = () => {
                           >
                             <Minus size={11} />
                           </button>
-                          <span style={{ fontWeight: 600, minWidth: '16px', textAlign: 'center' }}>
+                          <span style={{ fontWeight: 600, minWidth: '16px', textAlign: 'center', color: 'var(--text-primary)' }}>
                             {quantity}
                           </span>
                           <button
@@ -455,7 +470,7 @@ export const WaiterView: React.FC = () => {
                             <Plus size={11} />
                           </button>
                         </div>
-                        <span style={{ fontWeight: 700, minWidth: '60px', textAlign: 'right' }}>
+                        <span style={{ fontWeight: 700, minWidth: '60px', textAlign: 'right', color: 'var(--text-primary)' }}>
                           {formatPaiseToINR(subtotalPaise)}
                         </span>
                       </div>
@@ -475,19 +490,19 @@ export const WaiterView: React.FC = () => {
                   }}
                 >
                   <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Items Total</span>
-                  <span style={{ fontWeight: 700, fontSize: '16px' }}>{formatPaiseToINR(totalCartPaise)}</span>
+                  <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--text-primary)' }}>{formatPaiseToINR(totalCartPaise)}</span>
                 </div>
 
-                {/* Submit Order Button */}
+                {/* Primary Action Button: Send to Kitchen (KOT) */}
                 <button
                   type="button"
                   className="btn-primary"
-                  style={{ width: '100%', minHeight: '44px' }}
+                  style={{ width: '100%', minHeight: '46px', fontSize: '14px', fontWeight: 700 }}
                   onClick={handleSubmitOrder}
                   disabled={isSubmitting || totalCartQty === 0}
                 >
                   <Send size={15} />
-                  {isSubmitting ? 'Sending to Kitchen...' : `Submit Order (${totalCartQty} items)`}
+                  <span>{isSubmitting ? 'Sending to Kitchen (KOT)...' : `Send to Kitchen (KOT) (${totalCartQty} items)`}</span>
                 </button>
               </div>
             )}

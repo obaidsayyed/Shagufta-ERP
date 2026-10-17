@@ -141,11 +141,12 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
           </button>
           <button
             type="button"
-            className="btn-success"
+            className="btn-primary"
+            style={{ backgroundColor: 'var(--primary-action)', borderColor: 'var(--primary-action)', color: '#FFFFFF', fontWeight: 700 }}
             onClick={handleSettle}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Recording Settlement...' : `Confirm Paid (${paymentMethod.toUpperCase()})`}
+            {isSubmitting ? 'Recording Settlement...' : `Settle Payment (${paymentMethod.toUpperCase()})`}
           </button>
         </div>
       </div>

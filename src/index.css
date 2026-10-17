@@ -1,43 +1,60 @@
-/* Minimalist, functional product design system */
+/* Hotel ERP - Minimalist, high-performance product design system */
 :root {
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   
-  /* Color tokens - Crisp, high-contrast, restrained solid palette */
-  --bg-page: #f8fafc;
-  --bg-surface: #ffffff;
-  --bg-surface-subtle: #f1f5f9;
-  --bg-surface-hover: #e2e8f0;
+  /* Requested Color System */
+  /* App Background: Soft Charcoal / Dark Off-Black */
+  --bg-page: #1E293B;
+  --bg-surface: #1E293B;
+  --bg-surface-elevated: #283548;
+  --bg-surface-subtle: #334155;
+  --bg-surface-hover: #334155;
   
-  --border-subtle: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --border-subtle: #334155;
+  --border-strong: #475569;
   
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --text-inverse: #ffffff;
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-inverse: #FFFFFF;
   
-  /* Restrained solid purple accent */
-  --accent: #6b21a8;
-  --accent-hover: #581c87;
-  --accent-subtle: #f3e8ff;
-  --accent-border: #d8b4fe;
+  /* Item Grid Panels: Crisp White with Deep Obsidian Black text */
+  --item-grid-bg: #FFFFFF;
+  --item-grid-text: #0F172A;
+  --item-grid-subtext: #475569;
+  --item-grid-border: #E2E8F0;
+  
+  /* Primary Action: Fiery Crimson Red */
+  --primary-action: #B91C1C;
+  --primary-action-hover: #991B1B;
+  --accent: #B91C1C;
+  --accent-hover: #991B1B;
+  --accent-subtle: rgba(185, 28, 28, 0.2);
+  --accent-border: #DC2626;
+  
+  /* Secondary Accent: Spicy Amber Yellow (for modifiers, add-ons, notes) */
+  --secondary-accent: #F59E0B;
+  --secondary-accent-hover: #D97706;
+  --secondary-accent-text: #0F172A;
+  --secondary-accent-subtle: rgba(245, 158, 11, 0.2);
+  --secondary-accent-border: #F59E0B;
   
   /* Functional state colors */
-  --success: #15803d;
-  --success-bg: #f0fdf4;
-  --success-border: #bbf7d0;
+  --success: #16A34A;
+  --success-bg: rgba(22, 163, 74, 0.2);
+  --success-border: #22C55E;
 
-  --warning: #b45309;
-  --warning-bg: #fffbeb;
-  --warning-border: #fde68a;
+  --warning: #F59E0B;
+  --warning-bg: rgba(245, 158, 11, 0.2);
+  --warning-border: #FBBF24;
 
-  --danger: #b91c1c;
-  --danger-bg: #fef2f2;
-  --danger-border: #fecaca;
+  --danger: #B91C1C;
+  --danger-bg: rgba(185, 28, 28, 0.2);
+  --danger-border: #EF4444;
 
-  --info: #0369a1;
-  --info-bg: #f0f9ff;
-  --info-border: #bae6fd;
+  --info: #0284C7;
+  --info-bg: rgba(2, 132, 199, 0.2);
+  --info-border: #38BDF8;
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -48,6 +65,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  text-shadow: none !important;
 }
 
 body {
@@ -60,7 +78,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Headings - Restrained, clean scale */
+/* Headings */
 h1 {
   font-size: 20px;
   font-weight: 600;
@@ -80,7 +98,7 @@ h3 {
   color: var(--text-primary);
 }
 
-/* Interactive elements */
+/* Interactive elements: clean flat, no bouncy transitions */
 button {
   font-family: inherit;
   font-size: 13px;
@@ -94,55 +112,85 @@ button {
   justify-content: center;
   gap: 6px;
   min-height: 38px;
-  background: var(--bg-surface);
+  background: var(--bg-surface-elevated);
   color: var(--text-primary);
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 button:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.btn-primary {
-  background-color: var(--accent);
-  color: var(--text-inverse);
-  border-color: var(--accent);
+/* Primary Action - Fiery Crimson Red #B91C1C */
+.btn-primary, .btn-action-primary {
+  background-color: var(--primary-action) !important;
+  color: #FFFFFF !important;
+  border-color: var(--primary-action) !important;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: var(--accent-hover);
-  border-color: var(--accent-hover);
+.btn-primary:hover:not(:disabled), .btn-action-primary:hover:not(:disabled) {
+  background-color: var(--primary-action-hover) !important;
+  border-color: var(--primary-action-hover) !important;
 }
 
 .btn-secondary {
-  background-color: var(--bg-surface);
+  background-color: var(--bg-surface-elevated);
   color: var(--text-primary);
   border-color: var(--border-strong);
 }
 
 .btn-secondary:hover:not(:disabled) {
   background-color: var(--bg-surface-subtle);
+  border-color: var(--border-strong);
+}
+
+/* Modifier & Add-on Accent Button - Spicy Amber Yellow #F59E0B */
+.btn-accent-modifier {
+  background-color: var(--secondary-accent) !important;
+  color: var(--secondary-accent-text) !important;
+  border-color: var(--secondary-accent) !important;
+  font-weight: 600;
+}
+
+.btn-accent-modifier:hover:not(:disabled) {
+  background-color: var(--secondary-accent-hover) !important;
+}
+
+.modifier-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background-color: var(--secondary-accent-subtle);
+  color: var(--secondary-accent);
+  border: 1px solid var(--secondary-accent-border);
+  cursor: pointer;
 }
 
 .btn-danger {
   background-color: var(--danger-bg);
-  color: var(--danger);
+  color: #F87171;
   border-color: var(--danger-border);
 }
 
 .btn-danger:hover:not(:disabled) {
-  background-color: #fee2e2;
+  background-color: rgba(185, 28, 28, 0.35);
 }
 
 .btn-success {
   background-color: var(--success);
-  color: var(--text-inverse);
+  color: #FFFFFF;
   border-color: var(--success);
 }
 
 .btn-success:hover:not(:disabled) {
-  background-color: #166534;
+  background-color: #15803D;
 }
 
 .btn-sm {
@@ -163,7 +211,7 @@ input, select, textarea {
   font-family: inherit;
   font-size: 13px;
   color: var(--text-primary);
-  background-color: var(--bg-surface);
+  background-color: #0F172A;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   padding: 8px 12px;
@@ -172,8 +220,8 @@ input, select, textarea {
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  border-color: var(--primary-action);
+  box-shadow: none !important;
 }
 
 label {
@@ -184,7 +232,7 @@ label {
   margin-bottom: 4px;
 }
 
-/* Compact, purposeful data tables */
+/* Compact data tables */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -193,13 +241,13 @@ table {
 }
 
 th {
-  background-color: var(--bg-surface-subtle);
+  background-color: var(--bg-surface-elevated);
   color: var(--text-secondary);
   font-weight: 600;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border-strong);
 }
 
@@ -207,13 +255,14 @@ td {
   padding: 10px 12px;
   border-bottom: 1px solid var(--border-subtle);
   vertical-align: middle;
+  color: var(--text-primary);
 }
 
 tr:hover td {
-  background-color: #fafbfc;
+  background-color: rgba(51, 65, 85, 0.3);
 }
 
-/* Functional status pill badges */
+/* Status Badges */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -247,13 +296,13 @@ tr:hover td {
 
 .badge-danger {
   background-color: var(--danger-bg);
-  color: var(--danger);
+  color: #F87171;
   border: 1px solid var(--danger-border);
 }
 
 .badge-accent {
   background-color: var(--accent-subtle);
-  color: var(--accent);
+  color: #EF4444;
   border: 1px solid var(--accent-border);
 }
 
@@ -277,9 +326,9 @@ tr:hover td {
   padding: 16px;
 }
 
-/* Compact Cards */
+/* Panels */
 .panel {
-  background-color: var(--bg-surface);
+  background-color: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 16px;
@@ -294,6 +343,38 @@ tr:hover td {
   border-bottom: 1px solid var(--border-subtle);
 }
 
+/* Item Grid Food Cards: Crisp White with Deep Obsidian Black text */
+.item-grid-card {
+  background-color: var(--item-grid-bg);
+  color: var(--item-grid-text);
+  border: 1px solid var(--item-grid-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.item-grid-card .dish-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--item-grid-text);
+}
+
+.item-grid-card .dish-price {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--item-grid-text);
+  margin-top: 4px;
+}
+
+.item-grid-card .dish-category {
+  font-size: 11px;
+  color: var(--item-grid-subtext);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
 /* Modal Backdrop & Dialog */
 .modal-overlay {
   position: fixed;
@@ -301,7 +382,7 @@ tr:hover td {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(15, 23, 42, 0.45);
+  background-color: rgba(15, 23, 42, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -317,7 +398,6 @@ tr:hover td {
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .modal-header {
@@ -339,7 +419,7 @@ tr:hover td {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  background-color: var(--bg-surface-subtle);
+  background-color: var(--bg-surface-elevated);
 }
 
 /* Alert banner */
@@ -361,13 +441,13 @@ tr:hover td {
 
 .alert-banner-info {
   background-color: var(--info-bg);
-  color: var(--info);
+  color: #38BDF8;
   border: 1px solid var(--info-border);
 }
 
 .alert-banner-danger {
   background-color: var(--danger-bg);
-  color: var(--danger);
+  color: #F87171;
   border: 1px solid var(--danger-border);
 }
 

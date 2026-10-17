@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import { MenuItem, MenuCategory } from '../../types/database';
 import { formatPaiseToINR } from '../../lib/currency';
-import { X, Plus, Minus, Package, AlertCircle } from 'lucide-react';
+import { X, Plus, Minus, Package, AlertCircle, Send } from 'lucide-react';
 
 interface CreateParcelModalProps {
   isOpen: boolean;
@@ -148,8 +148,8 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
               </select>
             </div>
 
-            {/* Dishes list */}
-            <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '6px' }}>
+            {/* Dishes list: Crisp White cards with Deep Obsidian Black text */}
+            <div style={{ maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', padding: '2px' }}>
               {filteredDishes.map((dish) => {
                 const qty = cart[dish.id] || 0;
                 return (
@@ -159,16 +159,23 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '6px 8px',
-                      borderBottom: '1px solid var(--border-subtle)',
-                      fontSize: '13px',
+                      padding: '8px 12px',
+                      backgroundColor: '#FFFFFF',
+                      color: '#0F172A',
+                      borderRadius: '6px',
+                      border: qty > 0 ? '2px solid var(--primary-action)' : '1px solid #E2E8F0',
                     }}
                   >
                     <div>
-                      <span style={{ fontWeight: 600 }}>{dish.name}</span>
-                      <span style={{ marginLeft: '8px', color: 'var(--text-muted)' }}>
-                        {formatPaiseToINR(dish.price_paise)}
-                      </span>
+                      <div style={{ fontWeight: 700, fontSize: '13px', color: '#0F172A' }}>{dish.name}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>
+                          {formatPaiseToINR(dish.price_paise)}
+                        </span>
+                        <span className="modifier-chip" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                          Extra Gravy
+                        </span>
+                      </div>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -177,12 +184,12 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
                           <button
                             type="button"
                             className="btn-secondary btn-sm"
-                            style={{ width: '24px', height: '24px', padding: 0 }}
+                            style={{ width: '26px', height: '26px', padding: 0, backgroundColor: '#F1F5F9', color: '#0F172A', border: '1px solid #CBD5E1' }}
                             onClick={() => removeFromCart(dish.id)}
                           >
                             <Minus size={11} />
                           </button>
-                          <span style={{ fontWeight: 700, minWidth: '18px', textAlign: 'center' }}>
+                          <span style={{ fontWeight: 800, minWidth: '18px', textAlign: 'center', color: '#0F172A' }}>
                             {qty}
                           </span>
                         </>
@@ -190,7 +197,7 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
                       <button
                         type="button"
                         className="btn-primary btn-sm"
-                        style={{ width: '24px', height: '24px', padding: 0 }}
+                        style={{ width: '26px', height: '26px', padding: 0 }}
                         onClick={() => addToCart(dish.id)}
                       >
                         <Plus size={11} />
@@ -203,20 +210,20 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
 
             {/* Selected items review */}
             {totalQty > 0 && (
-              <div style={{ marginTop: '14px', backgroundColor: 'var(--bg-surface-subtle)', padding: '10px', borderRadius: '6px' }}>
+              <div style={{ marginTop: '14px', backgroundColor: 'var(--bg-surface-elevated)', border: '1px solid var(--border-subtle)', padding: '10px 12px', borderRadius: '6px' }}>
                 <span style={{ fontWeight: 700, fontSize: '12px', color: 'var(--text-secondary)' }}>
                   Parcel Items Summary ({totalQty} items):
                 </span>
                 <div style={{ marginTop: '6px' }}>
                   {cartEntries.map((e) => (
-                    <div key={e.item!.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '2px 0' }}>
+                    <div key={e.item!.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '2px 0', color: 'var(--text-primary)' }}>
                       <span>{e.item!.name} × {e.qty}</span>
-                      <span style={{ fontWeight: 600 }}>{formatPaiseToINR(e.totalPaise)}</span>
+                      <span style={{ fontWeight: 700 }}>{formatPaiseToINR(e.totalPaise)}</span>
                     </div>
                   ))}
-                  <div style={{ borderTop: '1px solid var(--border-strong)', marginTop: '6px', paddingTop: '6px', display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
+                  <div style={{ borderTop: '1px solid var(--border-strong)', marginTop: '6px', paddingTop: '6px', display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: 'var(--text-primary)' }}>
                     <span>Estimated Amount Due</span>
-                    <span>{formatPaiseToINR(totalPaise)}</span>
+                    <span style={{ color: 'var(--text-primary)', fontSize: '14px' }}>{formatPaiseToINR(totalPaise)}</span>
                   </div>
                 </div>
               </div>
@@ -230,9 +237,11 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
             <button
               type="submit"
               className="btn-primary"
+              style={{ fontWeight: 700, minHeight: '40px' }}
               disabled={isSubmitting || totalQty === 0}
             >
-              {isSubmitting ? 'Sending to Kitchen...' : `Generate Parcel & Send (${totalQty} items)`}
+              <Send size={15} />
+              <span>{isSubmitting ? 'Sending to Kitchen (KOT)...' : `Send to Kitchen (KOT) (${totalQty} items)`}</span>
             </button>
           </div>
         </form>

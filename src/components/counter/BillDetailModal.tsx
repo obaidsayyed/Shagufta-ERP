@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bill, OrderItem, BillAdjustment } from '../../types/database';
 import { formatPaiseToINR } from '../../lib/currency';
-import { X, Receipt, CheckCircle, Clock } from 'lucide-react';
+import { X, Receipt, CheckCircle, Clock, Printer } from 'lucide-react';
 
 interface BillDetailModalProps {
   isOpen: boolean;
@@ -183,14 +183,28 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
         </div>
 
         <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose}>
-            Close
+          <button
+            type="button"
+            className="btn-primary"
+            style={{ backgroundColor: 'var(--primary-action)', borderColor: 'var(--primary-action)', color: '#FFFFFF', fontWeight: 700 }}
+            onClick={() => window.print()}
+          >
+            <Printer size={15} />
+            <span>Print Bill</span>
           </button>
           {!isSettled && (
-            <button type="button" className="btn-success" onClick={onOpenSettlement}>
+            <button
+              type="button"
+              className="btn-success"
+              style={{ fontWeight: 700 }}
+              onClick={onOpenSettlement}
+            >
               Collect & Settle Bill
             </button>
           )}
+          <button type="button" className="btn-secondary" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>

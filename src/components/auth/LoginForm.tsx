@@ -4,7 +4,7 @@ import { Shield, KeyRound, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export const LoginForm: React.FC = () => {
   const { login } = useAuth();
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -15,7 +15,7 @@ export const LoginForm: React.FC = () => {
     setErrorMsg('');
     setLoading(true);
     try {
-      const res = await login(username, password);
+      const res = await login(identifier, password);
       if (!res.success) {
         setErrorMsg(res.error || 'Authentication failed');
       }
@@ -41,30 +41,31 @@ export const LoginForm: React.FC = () => {
       <div
         className="panel"
         style={{
-          maxWidth: '400px',
+          maxWidth: '420px',
           width: '100%',
-          padding: '28px 24px',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
+          padding: '32px 28px',
+          backgroundColor: 'var(--bg-surface-elevated)',
+          border: '1px solid var(--border-strong)',
           borderRadius: '8px',
         }}
       >
         <div style={{ marginBottom: '24px', textAlign: 'center' }}>
           <div
             style={{
-              width: '44px',
-              height: '44px',
+              width: '46px',
+              height: '46px',
               borderRadius: '8px',
               backgroundColor: 'var(--accent-subtle)',
-              color: 'var(--accent)',
+              color: 'var(--primary-action)',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: '10px',
+              marginBottom: '12px',
             }}
           >
-            <Shield size={24} />
+            <Shield size={26} color="var(--primary-action)" />
           </div>
-          <h1 style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.01em' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
             Hotel Operations Terminal
           </h1>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
@@ -80,21 +81,21 @@ export const LoginForm: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '14px' }}>
-            <label htmlFor="login-username">Staff Username / ID</label>
+          <div style={{ marginBottom: '16px' }}>
+            <label htmlFor="login-identifier">Staff ID or Email</label>
             <input
-              id="login-username"
+              id="login-identifier"
               type="text"
-              placeholder="e.g. Admin123"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="e.g. Admin123 or staff@hotel.com"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
               autoFocus
-              style={{ width: '100%', minHeight: '40px' }}
+              style={{ width: '100%', minHeight: '42px' }}
             />
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '22px' }}>
             <label htmlFor="login-password">Password</label>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <input
@@ -104,7 +105,7 @@ export const LoginForm: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                style={{ width: '100%', minHeight: '40px', paddingRight: '40px' }}
+                style={{ width: '100%', minHeight: '42px', paddingRight: '42px' }}
               />
               <button
                 type="button"
@@ -129,17 +130,17 @@ export const LoginForm: React.FC = () => {
           <button
             type="submit"
             className="btn-primary"
-            style={{ width: '100%', minHeight: '42px', fontSize: '14px', fontWeight: 600 }}
+            style={{ width: '100%', minHeight: '44px', fontSize: '14px', fontWeight: 700 }}
             disabled={loading}
           >
-            <KeyRound size={15} />
-            {loading ? 'Authenticating...' : 'Sign In'}
+            <KeyRound size={16} />
+            <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
           </button>
         </form>
 
-        <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: '1px solid var(--border-subtle)', textAlign: 'center' }}>
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-            Accounts are provisioned by the Counter Administrator. Only active authorized staff can sign in.
+        <div style={{ marginTop: '22px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', textAlign: 'center' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+            Accounts are provisioned by the Administrator. Only authorized active staff can sign in.
           </p>
         </div>
       </div>
