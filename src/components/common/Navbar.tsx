@@ -18,16 +18,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="app-header">
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Single Sidebar Toggle Button */}
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          title={isSidebarOpen ? 'Collapse Navigation Sidebar' : 'Expand Navigation Sidebar'}
-          className="btn-secondary btn-sm"
-          style={{ padding: '6px', minHeight: '34px', width: '34px' }}
-        >
-          {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeft size={18} />}
-        </button>
+        {/* Sidebar Toggle Button: Visible strictly for Admin */}
+        {role === 'admin' && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            title={isSidebarOpen ? 'Collapse Navigation Sidebar' : 'Expand Navigation Sidebar'}
+            className="btn-secondary btn-sm"
+            style={{ padding: '6px', minHeight: '34px', width: '34px' }}
+          >
+            {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeft size={18} />}
+          </button>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: 'var(--primary-action)' }} />

@@ -260,7 +260,7 @@ export const WaiterView: React.FC = () => {
       )}
 
       {/* Main Waiter Work Area: Left = Dishes / Right = Order Cart */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '14px' }}>
+      <div className="waiter-workspace-grid">
         {/* Left Column: Menu Browsing & Dish Search */}
         <div>
           {/* Search & Categories Bar */}

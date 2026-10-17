@@ -32,17 +32,19 @@ const MainApp: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'row', backgroundColor: 'var(--bg-page)' }}>
-      {/* Collapsible Sidebar */}
-      <Sidebar
-        isOpen={isSidebarOpen}
-        setIsOpen={(open) => {
-          setIsSidebarOpen(open);
-          localStorage.setItem('hotel_erp_sidebar_open', String(open));
-        }}
-        counterTab={counterTab}
-        setCounterTab={setCounterTab}
-        onOpenProfile={() => setIsProfileOpen(true)}
-      />
+      {/* Collapsible Sidebar - Rendered strictly for Admin */}
+      {role === 'admin' && (
+        <Sidebar
+          isOpen={isSidebarOpen}
+          setIsOpen={(open) => {
+            setIsSidebarOpen(open);
+            localStorage.setItem('hotel_erp_sidebar_open', String(open));
+          }}
+          counterTab={counterTab}
+          setCounterTab={setCounterTab}
+          onOpenProfile={() => setIsProfileOpen(true)}
+        />
+      )}
 
       {/* Main Workspace */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflowY: 'auto' }}>

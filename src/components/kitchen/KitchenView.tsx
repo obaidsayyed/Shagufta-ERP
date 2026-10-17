@@ -196,7 +196,7 @@ export const KitchenView: React.FC = () => {
       )}
 
       {/* Main Kitchen Prep Queue: Dine-In Tables vs Takeaway Parcels */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div className="kitchen-queue-grid">
         {/* Column 1: Dine-In Table Groups */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>

@@ -11,7 +11,7 @@ interface AuthContextType {
   login: (identifier: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfileAndName: (displayName: string, staffId: string) => Promise<void>;
-  updateUserPassword: (newPassword: string) => Promise<void>;
+  updateUserPassword: (oldPassword: string, newPassword: string) => Promise<void>;
   refreshStaff: () => Promise<void>;
   availableStaffList: StaffProfile[];
 }
@@ -158,8 +158,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await refreshStaff();
   };
 
-  const updateUserPassword = async (newPassword: string): Promise<void> => {
-    await api.updatePassword(newPassword);
+  const updateUserPassword = async (oldPassword: string, newPassword: string): Promise<void> => {
+    await api.updatePassword(oldPassword, newPassword);
   };
 
   const logout = () => {

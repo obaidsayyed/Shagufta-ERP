@@ -46,27 +46,27 @@ export const TableManagementView: React.FC<TableManagementViewProps> = ({
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Table Management</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Table Management</h2>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             Configure active floor tables and toggle operational availability
           </span>
         </div>
 
-        {/* Add Table form */}
-        <form onSubmit={handleAddTable} style={{ display: 'flex', gap: '8px' }}>
+        {/* Add Table form - responsive on mobile */}
+        <form onSubmit={handleAddTable} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: 'auto' }}>
           <input
             type="text"
             placeholder="e.g. T13 or Garden-1"
             value={newTableNumber}
             onChange={(e) => setNewTableNumber(e.target.value)}
-            style={{ width: '160px', minHeight: '34px' }}
+            style={{ width: '160px', minHeight: '38px' }}
             required
           />
-          <button type="submit" className="btn-primary btn-sm">
-            <Plus size={14} />
-            Add Table
+          <button type="submit" className="btn-primary" style={{ minHeight: '38px', padding: '0 14px' }}>
+            <Plus size={15} />
+            <span>Add Table</span>
           </button>
         </form>
       </div>

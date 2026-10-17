@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { X, User, KeyRound, Eye, EyeOff, CheckCircle, AlertCircle, Shield } from 'lucide-react';
+import { X, User, KeyRound, Eye, EyeOff, CheckCircle, AlertCircle, Lock } from 'lucide-react';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -11,9 +11,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
   const { currentStaff, role, updateProfileAndName, updateUserPassword } = useAuth();
 
   const [displayName, setDisplayName] = useState(currentStaff?.display_name || '');
+  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -32,31 +35,42 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
       return;
     }
 
-    if (newPassword && newPassword !== confirmPassword) {
-      setErrorMessage('New passwords do not match');
-      return;
-    }
-
-    if (newPassword && newPassword.length < 6) {
-      setErrorMessage('Password must be at least 6 characters');
-      return;
+    // If changing password, oldPassword is required
+    if (newPassword || oldPassword || confirmPassword) {
+      if (!oldPassword) {
+        setErrorMessage('Current password is required to change password.');
+        return;
+      }
+      if (!newPassword) {
+        setErrorMessage('Please enter your new password.');
+        return;
+      }
+      if (newPassword.length < 6) {
+        setErrorMessage('New password must be at least 6 characters.');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setErrorMessage('New password and confirm password do not match.');
+        return;
+      }
     }
 
     setIsSaving(true);
     try {
-      // 1. Update Display Name
+      // 1. Update Display Name if changed
       if (displayName.trim() !== currentStaff.display_name) {
         await updateProfileAndName(displayName.trim(), currentStaff.staff_id);
       }
 
-      // 2. Update Password if provided
-      if (newPassword) {
-        await updateUserPassword(newPassword);
+      // 2. Update Password with old password verification
+      if (newPassword && oldPassword) {
+        await updateUserPassword(oldPassword, newPassword);
+        setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
       }
 
-      setSuccessMessage('Profile information updated successfully!');
+      setSuccessMessage('Profile and credentials updated successfully!');
       setTimeout(() => {
         setSuccessMessage('');
         onClose();
@@ -130,7 +144,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             </div>
 
             {/* Editable Display Name */}
-            <div style={{ marginBottom: '14px' }}>
+            <div style={{ marginBottom: '16px' }}>
               <label htmlFor="profile-display-name">Display Name (Your Name)</label>
               <input
                 id="profile-display-name"
@@ -145,28 +159,32 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
               </span>
             </div>
 
-            {/* Password Reset Section */}
+            {/* Secure Password Change Section with Old Password Requirement */}
             <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '14px', marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                <KeyRound size={15} color="var(--text-secondary)" />
-                <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>Change Password (Optional)</span>
+                <Lock size={15} color="var(--primary-action)" />
+                <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>Change Password</span>
               </div>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.4 }}>
+                To update your password, enter your current password first for verification.
+              </p>
 
-              <div style={{ marginBottom: '10px' }}>
-                <label htmlFor="profile-new-pass">New Password</label>
+              {/* Old Password Field */}
+              <div style={{ marginBottom: '12px' }}>
+                <label htmlFor="profile-old-pass">Current Password</label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <input
-                    id="profile-new-pass"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Leave blank to keep current"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    id="profile-old-pass"
+                    type={showOldPassword ? 'text' : 'password'}
+                    placeholder="Enter current password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
                     style={{ width: '100%', paddingRight: '38px' }}
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    title={showPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    title={showOldPassword ? 'Hide password' : 'Show password'}
                     style={{
                       position: 'absolute',
                       right: '4px',
@@ -177,42 +195,72 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                       minHeight: 'auto',
                     }}
                   >
-                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    {showOldPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
               </div>
 
-              {newPassword && (
-                <div style={{ marginBottom: '10px' }}>
-                  <label htmlFor="profile-confirm-pass">Confirm New Password</label>
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <input
-                      id="profile-confirm-pass"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      placeholder="Re-enter new password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      style={{ width: '100%', paddingRight: '38px' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      title={showConfirmPassword ? 'Hide password' : 'Show password'}
-                      style={{
-                        position: 'absolute',
-                        right: '4px',
-                        background: 'none',
-                        border: 'none',
-                        padding: '6px',
-                        color: 'var(--text-muted)',
-                        minHeight: 'auto',
-                      }}
-                    >
-                      {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  </div>
+              {/* New Password Field */}
+              <div style={{ marginBottom: '12px' }}>
+                <label htmlFor="profile-new-pass">New Password</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    id="profile-new-pass"
+                    type={showNewPassword ? 'text' : 'password'}
+                    placeholder="Minimum 6 characters"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    style={{ width: '100%', paddingRight: '38px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    title={showNewPassword ? 'Hide password' : 'Show password'}
+                    style={{
+                      position: 'absolute',
+                      right: '4px',
+                      background: 'none',
+                      border: 'none',
+                      padding: '6px',
+                      color: 'var(--text-muted)',
+                      minHeight: 'auto',
+                    }}
+                  >
+                    {showNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
                 </div>
-              )}
+              </div>
+
+              {/* Confirm New Password Field */}
+              <div style={{ marginBottom: '10px' }}>
+                <label htmlFor="profile-confirm-pass">Confirm New Password</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    id="profile-confirm-pass"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Re-enter new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    style={{ width: '100%', paddingRight: '38px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    style={{
+                      position: 'absolute',
+                      right: '4px',
+                      background: 'none',
+                      border: 'none',
+                      padding: '6px',
+                      color: 'var(--text-muted)',
+                      minHeight: 'auto',
+                    }}
+                  >
+                    {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -221,7 +269,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
               Cancel
             </button>
             <button type="submit" className="btn-primary" disabled={isSaving}>
-              {isSaving ? 'Updating...' : 'Save Profile'}
+              {isSaving ? 'Verifying & Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>
