@@ -45,10 +45,8 @@ BEGIN
 END;
 $$;
 
--- 2. Procedure to provision Admin123 in Supabase Auth & public.staff_profiles
--- Run this in the Supabase SQL Editor to initialize Admin123 credentials:
--- Username: Admin123 (email: admin123@hotel.local)
--- Password: Admin@123
+-- 2. Robust Admin123 provisioning & repair script for Supabase GoTrue
+-- Fixes GoTrue 500 error ("sql: Scan error on column confirmation_token: converting NULL to string is unsupported")
 CREATE OR REPLACE FUNCTION public.provision_admin123()
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -56,13 +54,16 @@ SECURITY DEFINER
 SET search_path = public, auth, extensions
 AS $$
 DECLARE
-    v_user_id UUID := gen_random_uuid();
+    v_user_id UUID;
     v_email TEXT := 'admin123@hotel.local';
     v_encrypted_pw TEXT := extensions.crypt('Admin@123', extensions.gen_salt('bf'));
     v_profile_id UUID;
 BEGIN
     -- Check if user already exists in auth.users
-    IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = v_email) THEN
+    SELECT id INTO v_user_id FROM auth.users WHERE email = v_email;
+
+    IF v_user_id IS NULL THEN
+        v_user_id := gen_random_uuid();
         INSERT INTO auth.users (
             instance_id,
             id,
@@ -71,8 +72,16 @@ BEGIN
             email,
             encrypted_password,
             email_confirmed_at,
+            confirmation_token,
+            recovery_token,
+            email_change_token_new,
+            email_change,
+            phone_change,
+            phone_change_token,
+            email_change_token_current,
             raw_app_meta_data,
             raw_user_meta_data,
+            is_super_admin,
             created_at,
             updated_at
         )
@@ -84,17 +93,55 @@ BEGIN
             v_email,
             v_encrypted_pw,
             now(),
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
             '{"provider":"email","providers":["email"]}'::jsonb,
             '{"display_name":"Administrator","staff_id":"Admin123","role":"admin"}'::jsonb,
+            false,
             now(),
             now()
         );
     ELSE
-        SELECT id INTO v_user_id FROM auth.users WHERE email = v_email;
+        -- Repair existing user row so GoTrue string scan doesn't encounter NULL
         UPDATE auth.users 
         SET encrypted_password = v_encrypted_pw,
+            confirmation_token = COALESCE(confirmation_token, ''),
+            recovery_token = COALESCE(recovery_token, ''),
+            email_change_token_new = COALESCE(email_change_token_new, ''),
+            email_change = COALESCE(email_change, ''),
+            phone_change = COALESCE(phone_change, ''),
+            phone_change_token = COALESCE(phone_change_token, ''),
+            email_change_token_current = COALESCE(email_change_token_current, ''),
             updated_at = now()
         WHERE id = v_user_id;
+    END IF;
+
+    -- Ensure auth.identities has the email provider identity
+    IF NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = v_user_id AND provider = 'email') THEN
+        INSERT INTO auth.identities (
+            id,
+            user_id,
+            identity_data,
+            provider,
+            provider_id,
+            last_sign_in_at,
+            created_at,
+            updated_at
+        ) VALUES (
+            v_user_id::text,
+            v_user_id,
+            jsonb_build_object('sub', v_user_id::text, 'email', v_email),
+            'email',
+            v_email,
+            now(),
+            now(),
+            now()
+        );
     END IF;
 
     -- Upsert in public.staff_profiles
@@ -128,3 +175,7 @@ BEGIN
     );
 END;
 $$;
+
+-- 3. Execute immediately upon running this script
+SELECT public.provision_admin123();
+
