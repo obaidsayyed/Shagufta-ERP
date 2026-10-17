@@ -32,8 +32,18 @@ import {
   RefreshCw 
 } from 'lucide-react';
 
-export const CounterView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'sessions' | 'history' | 'menu' | 'tables' | 'staff' | 'analytics'>('sessions');
+interface CounterViewProps {
+  activeTab?: 'sessions' | 'history' | 'menu' | 'tables' | 'staff' | 'analytics';
+  setActiveTab?: (tab: 'sessions' | 'history' | 'menu' | 'tables' | 'staff' | 'analytics') => void;
+}
+
+export const CounterView: React.FC<CounterViewProps> = ({
+  activeTab: externalTab,
+  setActiveTab: externalSetTab,
+}) => {
+  const [internalTab, setInternalTab] = useState<'sessions' | 'history' | 'menu' | 'tables' | 'staff' | 'analytics'>('sessions');
+  const activeTab = externalTab ?? internalTab;
+  const setActiveTab = externalSetTab ?? setInternalTab;
 
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [tableSessions, setTableSessions] = useState<TableSession[]>([]);

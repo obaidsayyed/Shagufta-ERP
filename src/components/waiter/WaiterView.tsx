@@ -187,44 +187,50 @@ export const WaiterView: React.FC = () => {
         </div>
 
         {/* Horizontal table buttons */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(68px, 1fr))',
-            gap: '8px',
-          }}
-        >
-          {tables.map((tbl) => {
-            const hasSession = tableSessions.some((s) => s.table_id === tbl.id && s.session_status === 'open');
-            const isSelected = tbl.id === selectedTableId;
-            return (
-              <button
-                key={tbl.id}
-                type="button"
-                onClick={() => {
-                  setSelectedTableId(tbl.id);
-                  setSubmitSuccessTicket(null);
-                }}
-                style={{
-                  minHeight: '44px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '4px 6px',
-                  backgroundColor: isSelected ? 'var(--accent)' : hasSession ? 'var(--warning-bg)' : 'var(--bg-surface)',
-                  color: isSelected ? 'var(--text-inverse)' : hasSession ? 'var(--warning)' : 'var(--text-primary)',
-                  borderColor: isSelected ? 'var(--accent)' : hasSession ? 'var(--warning-border)' : 'var(--border-strong)',
-                }}
-              >
-                <span style={{ fontSize: '14px', fontWeight: 700 }}>{tbl.table_number}</span>
-                <span style={{ fontSize: '10px', opacity: 0.9 }}>
-                  {hasSession ? 'Active' : 'Empty'}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        {tables.length === 0 ? (
+          <div style={{ padding: '12px 0', color: 'var(--text-muted)', fontSize: '13px' }}>
+            No floor tables configured yet. Counter Admin can add tables in the <strong>Floor Tables</strong> management tab.
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(68px, 1fr))',
+              gap: '8px',
+            }}
+          >
+            {tables.map((tbl) => {
+              const hasSession = tableSessions.some((s) => s.table_id === tbl.id && s.session_status === 'open');
+              const isSelected = tbl.id === selectedTableId;
+              return (
+                <button
+                  key={tbl.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedTableId(tbl.id);
+                    setSubmitSuccessTicket(null);
+                  }}
+                  style={{
+                    minHeight: '44px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '4px 6px',
+                    backgroundColor: isSelected ? 'var(--accent)' : hasSession ? 'var(--warning-bg)' : 'var(--bg-surface)',
+                    color: isSelected ? 'var(--text-inverse)' : hasSession ? 'var(--warning)' : 'var(--text-primary)',
+                    borderColor: isSelected ? 'var(--accent)' : hasSession ? 'var(--warning-border)' : 'var(--border-strong)',
+                  }}
+                >
+                  <span style={{ fontSize: '14px', fontWeight: 700 }}>{tbl.table_number}</span>
+                  <span style={{ fontSize: '10px', opacity: 0.9 }}>
+                    {hasSession ? 'Active' : 'Empty'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {errorMessage && (
@@ -300,8 +306,16 @@ export const WaiterView: React.FC = () => {
           </div>
 
           {/* Dish Grid / List */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
-            {filteredDishes.map((dish) => {
+          {filteredDishes.length === 0 ? (
+            <div className="panel" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <p style={{ fontWeight: 600 }}>No menu items found</p>
+              <span style={{ fontSize: '12px' }}>
+                {searchQuery ? 'No dishes match your search query.' : 'Counter Admin can add categories and dishes in "Menu & Pricing".'}
+              </span>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+              {filteredDishes.map((dish) => {
               const qtyInCart = cart[dish.id] || 0;
               const isAvailable = dish.is_available;
               return (
@@ -373,6 +387,7 @@ export const WaiterView: React.FC = () => {
               );
             })}
           </div>
+          )}
         </div>
 
         {/* Right Column: Order Summary / Cart */}

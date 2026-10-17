@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import { StaffProfile, StaffRole } from '../../types/database';
-import { UserPlus, Shield, User, AlertCircle, X } from 'lucide-react';
+import { UserPlus, Shield, User, AlertCircle, X, Eye, EyeOff } from 'lucide-react';
 
 interface StaffManagementViewProps {
   staffList: StaffProfile[];
@@ -20,6 +20,7 @@ export const StaffManagementView: React.FC<StaffManagementViewProps> = ({
   const [role, setRole] = useState<StaffRole>('waiter');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState('');
   const [noticeMessage, setNoticeMessage] = useState('');
@@ -233,15 +234,33 @@ export const StaffManagementView: React.FC<StaffManagementViewProps> = ({
                 </div>
 
                 <div style={{ marginBottom: '12px' }}>
-                  <label htmlFor="staff-pass-input">Password (Optional)</label>
-                  <input
-                    id="staff-pass-input"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    style={{ width: '100%' }}
-                  />
+                  <label htmlFor="staff-pass-input">Password</label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <input
+                      id="staff-pass-input"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Minimum 6 characters"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      style={{ width: '100%', paddingRight: '38px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      title={showPassword ? 'Hide password' : 'Show password'}
+                      style={{
+                        position: 'absolute',
+                        right: '4px',
+                        background: 'none',
+                        border: 'none',
+                        padding: '6px',
+                        color: 'var(--text-muted)',
+                        minHeight: 'auto',
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

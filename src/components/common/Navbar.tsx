@@ -1,24 +1,44 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
-import { Shield, User, LogOut, RefreshCw } from 'lucide-react';
+import { Shield, User, LogOut, PanelLeft, PanelLeftClose } from 'lucide-react';
 
 interface NavbarProps {
   activeView: string;
-  setActiveView: (view: string) => void;
+  setActiveView: (view: 'counter' | 'waiter' | 'kitchen') => void;
+  isSidebarOpen: boolean;
+  onToggleSidebar: () => void;
+  onOpenProfile: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => {
-  const { currentStaff, role, loginAsStaff, logout, availableStaffList } = useAuth();
+export const Navbar: React.FC<NavbarProps> = ({
+  activeView,
+  setActiveView,
+  isSidebarOpen,
+  onToggleSidebar,
+  onOpenProfile,
+}) => {
+  const { currentStaff, role, logout } = useAuth();
   const isLive = api.isLiveSupabase();
 
   return (
     <header className="app-header">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Sidebar Toggle Button */}
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          title={isSidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
+          className="btn-secondary btn-sm"
+          style={{ padding: '6px', minHeight: '32px', width: '32px' }}
+        >
+          {isSidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeft size={16} />}
+        </button>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--accent)' }} />
-          <span style={{ fontWeight: 700, fontSize: '15px', letterSpacing: '-0.01em' }}>
-            HOTEL ORDER MANAGEMENT
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent)' }} />
+          <span style={{ fontWeight: 800, fontSize: '14px', letterSpacing: '-0.01em' }}>
+            HOTEL ERP
           </span>
         </div>
 
@@ -33,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => 
             fontWeight: 600,
           }}
         >
-          {isLive ? 'SUPABASE LIVE' : 'TRANSACTIONAL ENGINE'}
+          {isLive ? 'SUPABASE LIVE' : 'LOCAL ENGINE'}
         </span>
       </div>
 
@@ -69,36 +89,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => 
             </div>
           )}
 
-          {/* Quick Staff Switcher for Operational Convenience */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <label htmlFor="staff-quick-select" style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>
-              Staff:
-            </label>
-            <select
-              id="staff-quick-select"
-              value={currentStaff.staff_id}
-              onChange={(e) => loginAsStaff(e.target.value)}
-              style={{ minHeight: '30px', padding: '2px 8px', fontSize: '12px' }}
-            >
-              {availableStaffList.map((s) => (
-                <option key={s.id} value={s.staff_id} disabled={!s.is_active}>
-                  {s.staff_id} — {s.display_name} ({s.role}) {!s.is_active ? '[Disabled]' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Current Staff Badge */}
-          <div
+          {/* Current Staff Badge / Profile Button */}
+          <button
+            type="button"
+            className="btn-secondary btn-sm"
+            onClick={onOpenProfile}
+            title="Click to edit profile or change password"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               padding: '4px 10px',
-              backgroundColor: 'var(--bg-surface-subtle)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '6px',
-              fontSize: '12px',
+              minHeight: '32px',
             }}
           >
             {role === 'admin' ? (
@@ -106,18 +108,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView }) => 
             ) : (
               <User size={14} color="var(--text-secondary)" />
             )}
-            <span style={{ fontWeight: 600 }}>{currentStaff.staff_id}</span>
-            <span style={{ color: 'var(--text-muted)' }}>|</span>
-            <span style={{ textTransform: 'uppercase', fontSize: '11px', fontWeight: 600, color: 'var(--accent)' }}>
-              {currentStaff.role}
-            </span>
-          </div>
+            <span style={{ fontWeight: 600 }}>{currentStaff.display_name}</span>
+            <span style={{ color: 'var(--text-muted)' }}>({currentStaff.staff_id})</span>
+          </button>
 
           <button
             type="button"
             className="btn-secondary btn-sm"
             onClick={logout}
-            title="Log out of current staff account"
+            title="Log out"
+            style={{ minHeight: '32px' }}
           >
             <LogOut size={13} />
             Exit

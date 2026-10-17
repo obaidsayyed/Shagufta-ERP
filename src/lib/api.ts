@@ -104,6 +104,39 @@ export const api = {
     return mockDb.toggleStaffStatus(staff_profile_id, is_active);
   },
 
+  async updateSelfProfile(params: {
+    display_name: string;
+    staff_id: string;
+    auth_user_id?: string;
+  }): Promise<{ status: string; display_name: string; staff_id: string }> {
+    if (useLiveSupabase && supabase) {
+      const { data, error } = await supabase.rpc('rpc_update_self_profile', {
+        p_display_name: params.display_name,
+        p_staff_id: params.staff_id,
+      });
+      if (error) throw new Error(error.message);
+      return data;
+    }
+
+    // In mock mode
+    const all = mockDb.getStaffProfiles();
+    const current = all.find((s) => (params.auth_user_id && s.auth_user_id === params.auth_user_id) || s.is_active);
+    if (current) {
+      current.display_name = params.display_name.trim();
+      current.staff_id = params.staff_id.trim();
+    }
+    return { status: 'success', display_name: params.display_name, staff_id: params.staff_id };
+  },
+
+  async updatePassword(newPassword: string): Promise<void> {
+    if (useLiveSupabase && supabase) {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw new Error(error.message);
+      return;
+    }
+    // Mock success
+  },
+
   // 2. Menu Categories & Items
   async getMenuCategories(): Promise<MenuCategory[]> {
     if (useLiveSupabase && supabase) {

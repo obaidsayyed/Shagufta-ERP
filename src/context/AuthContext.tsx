@@ -8,9 +8,10 @@ interface AuthContextType {
   currentStaff: StaffProfile | null;
   role: StaffRole | null;
   isAuthenticated: boolean;
-  loginAsStaff: (staffId: string) => Promise<boolean>;
-  loginWithEmail: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  login: (identifier: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  updateProfileAndName: (displayName: string, staffId: string) => Promise<void>;
+  updateUserPassword: (newPassword: string) => Promise<void>;
   refreshStaff: () => Promise<void>;
   availableStaffList: StaffProfile[];
 }
@@ -22,43 +23,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [availableStaffList, setAvailableStaffList] = useState<StaffProfile[]>([]);
 
   const refreshStaff = async () => {
-    const list = await api.getAllStaffProfiles();
-    setAvailableStaffList(list);
+    try {
+      const list = await api.getAllStaffProfiles();
+      setAvailableStaffList(list);
 
-    // If current staff got disabled, immediately force logout
-    if (currentStaff) {
-      const updated = list.find((s) => s.id === currentStaff.id);
-      if (!updated || !updated.is_active) {
-        setCurrentStaff(null);
-        localStorage.removeItem('hotel_erp_active_staff_id');
-      } else {
-        setCurrentStaff(updated);
+      if (currentStaff) {
+        const updated = list.find((s) => s.id === currentStaff.id);
+        if (!updated || !updated.is_active) {
+          setCurrentStaff(null);
+          localStorage.removeItem('hotel_erp_active_staff_id');
+        } else {
+          setCurrentStaff(updated);
+        }
       }
+    } catch {
+      // Ignore if table empty
     }
   };
 
   useEffect(() => {
-    refreshStaff();
-
-    // Check if staff was previously selected in localStorage
-    const savedStaffId = localStorage.getItem('hotel_erp_active_staff_id');
-    if (savedStaffId) {
-      const all = mockDb.getStaffProfiles();
-      const match = all.find((s) => s.staff_id === savedStaffId && s.is_active);
-      if (match) {
-        setCurrentStaff(match);
+    const initAuth = async () => {
+      if (api.isLiveSupabase() && supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const profile = await api.getCurrentStaffProfile(session.user.id);
+          if (profile && profile.is_active) {
+            setCurrentStaff(profile);
+            localStorage.setItem('hotel_erp_active_staff_id', profile.staff_id);
+          }
+        }
+      } else {
+        // In local/mock mode: only restore if an active session was previously saved
+        const savedStaffId = localStorage.getItem('hotel_erp_active_staff_id');
+        if (savedStaffId) {
+          const all = mockDb.getStaffProfiles();
+          const match = all.find((s) => s.staff_id.toLowerCase() === savedStaffId.toLowerCase() && s.is_active);
+          if (match) {
+            setCurrentStaff(match);
+          }
+        }
       }
-    } else {
-      // Default initial staff for development ease
-      const all = mockDb.getStaffProfiles();
-      const admin = all.find((s) => s.role === 'admin' && s.is_active);
-      if (admin) {
-        setCurrentStaff(admin);
-        localStorage.setItem('hotel_erp_active_staff_id', admin.staff_id);
-      }
-    }
+      await refreshStaff();
+    };
 
-    // Subscribe to staff updates
+    initAuth();
+
     const unsubscribe = mockDb.subscribe((event) => {
       if (event === 'STAFF_UPDATED') {
         refreshStaff();
@@ -68,53 +77,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const loginAsStaff = async (staffId: string): Promise<boolean> => {
-    const all = await api.getAllStaffProfiles();
-    const target = all.find((s) => s.staff_id.toUpperCase() === staffId.trim().toUpperCase());
-
-    if (!target) {
-      throw new Error(`Staff ID "${staffId}" not found.`);
+  const login = async (identifier: string, pass: string): Promise<{ success: boolean; error?: string }> => {
+    const cleanId = identifier.trim();
+    if (!cleanId || !pass) {
+      return { success: false, error: 'Please enter both username and password' };
     }
 
-    if (!target.is_active) {
-      throw new Error(`Staff account "${target.display_name}" is disabled. Contact Counter Admin.`);
-    }
-
-    setCurrentStaff(target);
-    localStorage.setItem('hotel_erp_active_staff_id', target.staff_id);
-    return true;
-  };
-
-  const loginWithEmail = async (email: string, pass: string): Promise<{ success: boolean; error?: string }> => {
     if (api.isLiveSupabase() && supabase) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      // Normalize username to email if no @ present
+      const emailToUse = cleanId.includes('@') ? cleanId.toLowerCase() : `${cleanId.toLowerCase()}@hotel.local`;
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailToUse,
+        password: pass,
+      });
+
       if (error || !data.user) {
-        return { success: false, error: error?.message || 'Login failed' };
+        return { success: false, error: error?.message || 'Invalid username or password' };
       }
+
       const profile = await api.getCurrentStaffProfile(data.user.id);
       if (!profile || !profile.is_active) {
         await supabase.auth.signOut();
-        return { success: false, error: 'Account is disabled or profile does not exist.' };
+        return { success: false, error: 'Staff account is disabled or unlinked. Contact Counter Admin.' };
       }
+
       setCurrentStaff(profile);
       localStorage.setItem('hotel_erp_active_staff_id', profile.staff_id);
       return { success: true };
     }
 
-    // In mock mode: match email to sample staff
-    const lowerEmail = email.toLowerCase().trim();
+    // Mock environment login
     const all = mockDb.getStaffProfiles();
-    let match: StaffProfile | undefined;
-
-    if (lowerEmail.includes('admin')) {
-      match = all.find((s) => s.role === 'admin');
-    } else if (lowerEmail.includes('waiter')) {
-      match = all.find((s) => s.role === 'waiter');
-    } else if (lowerEmail.includes('chef')) {
-      match = all.find((s) => s.role === 'chef');
-    } else {
-      match = all.find((s) => s.is_active);
-    }
+    const match = all.find(
+      (s) => (s.staff_id.toLowerCase() === cleanId.toLowerCase() || s.display_name.toLowerCase() === cleanId.toLowerCase())
+    );
 
     if (match) {
       if (!match.is_active) {
@@ -125,7 +122,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true };
     }
 
-    return { success: false, error: 'Invalid credentials' };
+    // Support Admin123 default in mock mode
+    if (cleanId.toLowerCase() === 'admin123' && pass === 'Admin@123') {
+      let admin = all.find((s) => s.role === 'admin' && s.is_active);
+      if (!admin) {
+        admin = mockDb.createStaffProfile({
+          staff_id: 'Admin123',
+          display_name: 'Administrator',
+          role: 'admin',
+          caller_admin_id: 'SYSTEM',
+        });
+      }
+      setCurrentStaff(admin);
+      localStorage.setItem('hotel_erp_active_staff_id', admin.staff_id);
+      return { success: true };
+    }
+
+    return { success: false, error: 'Invalid username or password' };
+  };
+
+  const updateProfileAndName = async (displayName: string, staffId: string): Promise<void> => {
+    if (!currentStaff) return;
+    const res = await api.updateSelfProfile({
+      display_name: displayName,
+      staff_id: staffId,
+      auth_user_id: currentStaff.auth_user_id,
+    });
+
+    setCurrentStaff({
+      ...currentStaff,
+      display_name: res.display_name,
+      staff_id: res.staff_id,
+    });
+    localStorage.setItem('hotel_erp_active_staff_id', res.staff_id);
+    await refreshStaff();
+  };
+
+  const updateUserPassword = async (newPassword: string): Promise<void> => {
+    await api.updatePassword(newPassword);
   };
 
   const logout = () => {
@@ -142,9 +176,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         currentStaff,
         role: currentStaff?.role || null,
         isAuthenticated: !!currentStaff && currentStaff.is_active,
-        loginAsStaff,
-        loginWithEmail,
+        login,
         logout,
+        updateProfileAndName,
+        updateUserPassword,
         refreshStaff,
         availableStaffList,
       }}
