@@ -1,6 +1,6 @@
 /* Hotel ERP - Minimalist, high-performance product design system */
 :root {
-  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family: "Times New Roman", Times, Georgia, serif;
   
   /* Requested Color System */
   /* App Background: Soft Charcoal / Dark Off-Black */
@@ -470,6 +470,42 @@ tr:hover td {
   gap: 12px;
 }
 
+/* Floor Tables Management Grid */
+.tables-management-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* Waiter & Floor Table Squares Grid */
+.table-square-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+}
+
+.table-square-btn {
+  aspect-ratio: 1 / 1;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* Waiter Dish Grid */
+.waiter-dish-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
 /* Responsive Workspace Grids */
 .waiter-workspace-grid {
   display: grid;
@@ -491,15 +527,177 @@ tr:hover td {
     grid-template-columns: 1fr;
   }
   .layout-main {
-    padding: 10px 8px;
+    padding: 8px 6px;
   }
-  .grid-2, .grid-3, .grid-4 {
+  .grid-2 {
     grid-template-columns: 1fr;
+  }
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-4, .tables-management-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
   .app-header {
     height: auto;
-    padding: 10px 12px;
+    padding: 8px 10px;
     flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+/* Mobile Responsive Optimization - Clean, Medium & Compact Elements */
+@media (max-width: 768px) {
+  body {
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: 17px;
+  }
+
+  h2 {
+    font-size: 15px;
+  }
+
+  h3 {
+    font-size: 13.5px;
+  }
+
+  /* Compact buttons for clean mobile usage */
+  button {
+    min-height: 32px;
+    padding: 5px 10px;
+    font-size: 12.5px;
+    gap: 4px;
+    border-radius: 4px;
+  }
+
+  .btn-sm {
+    min-height: 26px;
+    padding: 3px 8px;
+    font-size: 11.5px;
+  }
+
+  .btn-lg {
+    min-height: 38px;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  /* Compact form inputs */
+  input, select, textarea {
+    min-height: 32px;
+    padding: 5px 8px;
+    font-size: 12.5px;
+    border-radius: 4px;
+  }
+
+  /* Compact panels */
+  .panel {
+    padding: 10px 12px;
+    border-radius: 6px;
+  }
+
+  .panel-header {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+
+  /* Compact table squares on mobile: 4 columns, clean medium square */
+  .table-square-grid {
+    grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
     gap: 8px;
+  }
+
+  .table-square-btn {
+    min-height: 54px;
+    padding: 6px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
+
+  /* 2-column compact dish cards on mobile */
+  .waiter-dish-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .item-grid-card {
+    padding: 8px 10px;
+    border-radius: 6px;
+  }
+
+  .item-grid-card .dish-name {
+    font-size: 12.5px;
+    line-height: 1.25;
+  }
+
+  .item-grid-card .dish-price {
+    font-size: 13px;
+    margin-top: 3px;
+  }
+
+  .modifier-chip {
+    font-size: 9.5px;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* Compact badges */
+  .badge {
+    font-size: 10px;
+    padding: 1px 5px;
+  }
+
+  /* Compact modals */
+  .modal-overlay {
+    padding: 8px;
+  }
+
+  .modal-content {
+    max-height: 94vh;
+    border-radius: 6px;
+  }
+
+  .modal-header {
+    padding: 10px 12px;
+  }
+
+  .modal-body {
+    padding: 12px;
+  }
+
+  .modal-footer {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-square-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .table-square-btn {
+    min-height: 48px;
+    font-size: 13px;
+    padding: 4px;
+  }
+
+  .waiter-dish-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .item-grid-card {
+    padding: 6px 8px;
+  }
+
+  .grid-4, .tables-management-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
   }
 }

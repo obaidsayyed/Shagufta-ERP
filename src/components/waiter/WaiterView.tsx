@@ -191,57 +191,42 @@ export const WaiterView: React.FC = () => {
                 No active floor tables configured yet. Counter Admin can add tables in the Floor Tables tab.
               </div>
             ) : (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-                  gap: '12px',
-                }}
-              >
+              <div className="table-square-grid">
                 {tables.map((tbl) => {
                   const hasSession = tableSessions.some((s) => s.table_id === tbl.id && s.session_status === 'open');
                   return (
                     <button
                       key={tbl.id}
                       type="button"
+                      className="table-square-btn"
                       onClick={() => {
                         setSelectedTableId(tbl.id);
                         setSubmitSuccessTicket(null);
                         setErrorMessage('');
                       }}
                       style={{
-                        aspectRatio: '1 / 1',
-                        minHeight: '90px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '10px',
                         backgroundColor: hasSession ? 'var(--warning-bg)' : 'var(--bg-surface-elevated)',
                         borderColor: hasSession ? 'var(--warning-border)' : 'var(--border-strong)',
                         borderWidth: hasSession ? '2px' : '1px',
                         borderStyle: 'solid',
-                        borderRadius: '10px',
-                        cursor: 'pointer',
-                        position: 'relative',
                         boxShadow: hasSession ? '0 0 10px rgba(245, 158, 11, 0.15)' : 'none',
-                        transition: 'transform 0.12s ease, box-shadow 0.12s ease',
                       }}
                     >
                       {hasSession && (
                         <span
                           style={{
                             position: 'absolute',
-                            top: '8px',
-                            right: '8px',
-                            width: '8px',
-                            height: '8px',
+                            top: '6px',
+                            right: '6px',
+                            width: '7px',
+                            height: '7px',
                             borderRadius: '50%',
                             backgroundColor: 'var(--warning)',
                           }}
                           title="Active dining session"
                         />
                       )}
-                      <span style={{ fontSize: '18px', fontWeight: 800, color: hasSession ? 'var(--warning)' : 'var(--text-primary)' }}>
+                      <span style={{ fontWeight: 800, color: hasSession ? 'var(--warning)' : 'var(--text-primary)' }}>
                         {tbl.table_number}
                       </span>
                     </button>
@@ -258,13 +243,13 @@ export const WaiterView: React.FC = () => {
           <div
             className="panel"
             style={{
-              marginBottom: '14px',
-              padding: '12px 16px',
+              marginBottom: '12px',
+              padding: '10px 14px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               flexWrap: 'wrap',
-              gap: '10px',
+              gap: '8px',
             }}
           >
             <button
@@ -275,23 +260,23 @@ export const WaiterView: React.FC = () => {
                 setSubmitSuccessTicket(null);
                 setErrorMessage('');
               }}
-              style={{ minHeight: '38px', padding: '0 14px' }}
+              style={{ minHeight: '32px', padding: '0 12px' }}
             >
-              <ArrowLeft size={16} />
+              <ArrowLeft size={15} />
               <span>Back to Tables</span>
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>
                 Table: {selectedTable?.table_number}
               </span>
               {activeSession ? (
                 <span className="badge badge-pending">
-                  OPEN SESSION (BILL RUNNING)
+                  OPEN SESSION
                 </span>
               ) : (
                 <span className="badge badge-settled">
-                  VACANT / NEW SESSION
+                  VACANT
                 </span>
               )}
             </div>
@@ -400,7 +385,7 @@ export const WaiterView: React.FC = () => {
                   </span>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+                <div className="waiter-dish-grid">
                   {filteredDishes.map((dish) => {
                     const qtyInCart = cart[dish.id] || 0;
                     const isAvailable = dish.is_available;
@@ -409,20 +394,13 @@ export const WaiterView: React.FC = () => {
                         key={dish.id}
                         className="item-grid-card"
                         style={{
-                          backgroundColor: '#FFFFFF',
-                          color: '#0F172A',
                           border: qtyInCart > 0 ? '2px solid var(--primary-action)' : '1px solid #E2E8F0',
-                          borderRadius: '8px',
-                          padding: '12px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
                           opacity: isAvailable ? 1 : 0.6,
                         }}
                       >
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '4px' }}>
-                            <span style={{ fontWeight: 700, fontSize: '14px', color: '#0F172A', lineHeight: 1.3 }}>
+                            <span className="dish-name" style={{ lineHeight: 1.3 }}>
                               {dish.name}
                             </span>
                             {!isAvailable && (
@@ -431,12 +409,12 @@ export const WaiterView: React.FC = () => {
                               </span>
                             )}
                           </div>
-                          <div style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>
+                          <div className="dish-price">
                             {formatPaiseToINR(dish.price_paise)}
                           </div>
 
                           {/* Quick Modifiers / Add-on Accents (Spicy Amber Yellow) */}
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
                             <span className="modifier-chip" title="Add special modifier note">
                               Extra Gravy
                             </span>
@@ -447,28 +425,28 @@ export const WaiterView: React.FC = () => {
                         </div>
 
                         {/* Add / Quantity Controller */}
-                        <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                        <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
                           {qtyInCart > 0 ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                               <button
                                 type="button"
                                 className="btn-secondary btn-sm"
-                                style={{ width: '28px', height: '28px', padding: 0, backgroundColor: '#F1F5F9', color: '#0F172A', border: '1px solid #CBD5E1' }}
+                                style={{ width: '26px', height: '26px', padding: 0, backgroundColor: '#F1F5F9', color: '#0F172A', border: '1px solid #CBD5E1' }}
                                 onClick={() => removeFromCart(dish.id)}
                               >
-                                <Minus size={13} />
+                                <Minus size={12} />
                               </button>
-                              <span style={{ fontWeight: 800, minWidth: '22px', textAlign: 'center', color: '#0F172A', fontSize: '14px' }}>
+                              <span style={{ fontWeight: 800, minWidth: '18px', textAlign: 'center', color: '#0F172A', fontSize: '13px' }}>
                                 {qtyInCart}
                               </span>
                               <button
                                 type="button"
                                 className="btn-primary btn-sm"
-                                style={{ width: '28px', height: '28px', padding: 0 }}
+                                style={{ width: '26px', height: '26px', padding: 0 }}
                                 onClick={() => addToCart(dish.id)}
                                 disabled={!isAvailable}
                               >
-                                <Plus size={13} />
+                                <Plus size={12} />
                               </button>
                             </div>
                           ) : (
@@ -477,9 +455,9 @@ export const WaiterView: React.FC = () => {
                               className="btn-primary btn-sm"
                               onClick={() => addToCart(dish.id)}
                               disabled={!isAvailable}
-                              style={{ width: '100%', minHeight: '32px' }}
+                              style={{ width: '100%', minHeight: '28px' }}
                             >
-                              <Plus size={13} />
+                              <Plus size={12} />
                               Add Item
                             </button>
                           )}

@@ -61,10 +61,10 @@ export const TableManagementView: React.FC<TableManagementViewProps> = ({
             placeholder="e.g. T13 or Garden-1"
             value={newTableNumber}
             onChange={(e) => setNewTableNumber(e.target.value)}
-            style={{ width: '160px', minHeight: '38px' }}
+            style={{ width: '150px' }}
             required
           />
-          <button type="submit" className="btn-primary" style={{ minHeight: '38px', padding: '0 14px' }}>
+          <button type="submit" className="btn-primary" style={{ padding: '0 12px' }}>
             <Plus size={15} />
             <span>Add Table</span>
           </button>
@@ -88,7 +88,7 @@ export const TableManagementView: React.FC<TableManagementViewProps> = ({
       )}
 
       {/* Tables Grid */}
-      <div className="grid-4">
+      <div className="tables-management-grid">
         {tables.map((tbl) => {
           const hasOpenSession = tableSessions.some((s) => s.table_id === tbl.id && s.session_status === 'open');
           return (
@@ -99,7 +99,7 @@ export const TableManagementView: React.FC<TableManagementViewProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '12px 14px',
+                padding: '10px 12px',
                 opacity: tbl.is_active ? 1 : 0.6,
                 backgroundColor: tbl.is_active ? 'var(--bg-surface)' : 'var(--bg-surface-subtle)',
               }}

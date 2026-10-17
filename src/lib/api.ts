@@ -209,7 +209,8 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('menu_categories').select('*').order('display_order');
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
+          mockDb.syncCategories(data as MenuCategory[]);
           return data as MenuCategory[];
         }
         logApiNotice('getMenuCategories', error?.message);
@@ -224,7 +225,8 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('menu_items').select('*').order('name');
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
+          mockDb.syncMenuItems(data as MenuItem[]);
           return data as MenuItem[];
         }
         logApiNotice('getMenuItems', error?.message);
@@ -240,6 +242,7 @@ export const api = {
       try {
         const { data, error } = await supabase.from('menu_items').insert(params).select().single();
         if (!error && data) {
+          mockDb.syncMenuItems([data as MenuItem]);
           return data as MenuItem;
         }
         logApiNotice('createMenuItem', error?.message);
@@ -255,6 +258,7 @@ export const api = {
       try {
         const { data, error } = await supabase.from('menu_items').update(updates).eq('id', id).select().single();
         if (!error && data) {
+          mockDb.syncMenuItems([data as MenuItem]);
           return data as MenuItem;
         }
         logApiNotice('updateMenuItem', error?.message);
@@ -273,10 +277,14 @@ export const api = {
         if (count && count > 0) {
           // Safe archive
           await supabase.from('menu_items').update({ is_archived: true, is_available: false }).eq('id', id);
+          mockDb.updateMenuItem(id, { is_archived: true, is_available: false });
           return { success: true, reason: 'Item has historical references. Safely archived.' };
         }
         const { error } = await supabase.from('menu_items').delete().eq('id', id);
-        if (!error) return { success: true };
+        if (!error) {
+          mockDb.safeDeleteMenuItem(id);
+          return { success: true };
+        }
         logApiNotice('safeDeleteMenuItem', error?.message);
       } catch (err) {
         logApiNotice('safeDeleteMenuItem', err);
@@ -290,6 +298,7 @@ export const api = {
       try {
         const { data, error } = await supabase.from('menu_categories').insert({ name, display_order: display_order || 0 }).select().single();
         if (!error && data) {
+          mockDb.syncCategories([data as MenuCategory]);
           return data as MenuCategory;
         }
         logApiNotice('createCategory', error?.message);
@@ -305,6 +314,7 @@ export const api = {
       try {
         const { data, error } = await supabase.from('menu_categories').update(updates).eq('id', id).select().single();
         if (!error && data) {
+          mockDb.syncCategories([data as MenuCategory]);
           return data as MenuCategory;
         }
         logApiNotice('updateCategory', error?.message);
@@ -320,7 +330,8 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('tables').select('*').order('table_number');
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
+          mockDb.syncTables(data as DiningTable[]);
           return data as DiningTable[];
         }
         logApiNotice('getTables', error?.message);
@@ -332,28 +343,36 @@ export const api = {
   },
 
   async createTable(table_number: string): Promise<DiningTable> {
+    const cleanNum = table_number.trim().toUpperCase();
+    const existing = mockDb.getTables().find((t) => t.table_number.toLowerCase() === cleanNum.toLowerCase());
+    if (existing) {
+      if (!existing.is_active) {
+        return mockDb.toggleTableActive(existing.id, true);
+      }
+      throw new Error(`Table "${cleanNum}" already exists.`);
+    }
+
     if (useLiveSupabase && supabase) {
       try {
-        const { data, error } = await supabase.from('tables').insert({ table_number }).select().single();
+        const { data, error } = await supabase.from('tables').insert({ table_number: cleanNum }).select().single();
         if (!error && data) {
+          mockDb.syncTables([data as DiningTable]);
           return data as DiningTable;
         }
         if (error) {
-          if (error.code === '23505') {
-            throw new Error(`Table "${table_number}" already exists.`);
+          if (error.code === '23505' || error.message?.includes('already exists') || error.message?.includes('duplicate')) {
+            throw new Error(`Table "${cleanNum}" already exists.`);
           }
           logApiNotice('createTable', error.message);
-          return mockDb.createTable(table_number);
         }
       } catch (err) {
         if (err instanceof Error && err.message.includes('already exists')) {
           throw err;
         }
         logApiNotice('createTable fallback', err);
-        return mockDb.createTable(table_number);
       }
     }
-    return mockDb.createTable(table_number);
+    return mockDb.createTable(cleanNum);
   },
 
   async toggleTableActive(id: string, is_active: boolean): Promise<DiningTable> {
@@ -361,15 +380,14 @@ export const api = {
       try {
         const { data, error } = await supabase.from('tables').update({ is_active }).eq('id', id).select().single();
         if (!error && data) {
+          mockDb.syncTables([data as DiningTable]);
           return data as DiningTable;
         }
         if (error) {
           logApiNotice('toggleTableActive', error.message);
-          return mockDb.toggleTableActive(id, is_active);
         }
       } catch (err) {
         logApiNotice('toggleTableActive fallback', err);
-        return mockDb.toggleTableActive(id, is_active);
       }
     }
     return mockDb.toggleTableActive(id, is_active);
@@ -379,7 +397,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('table_sessions').select('*');
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
           return data as TableSession[];
         }
         logApiNotice('getTableSessions', error?.message);
@@ -394,7 +412,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('parcel_orders').select('*').order('created_at', { ascending: false });
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
           return data as ParcelOrder[];
         }
         logApiNotice('getParcelOrders', error?.message);
@@ -410,7 +428,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
           return data as OrderTicket[];
         }
         logApiNotice('getOrders', error?.message);
@@ -425,7 +443,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('order_items').select('*').order('created_at', { ascending: true });
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
           return data as OrderItem[];
         }
         logApiNotice('getOrderItems', error?.message);
@@ -440,7 +458,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('bills').select('*').order('created_at', { ascending: false });
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
           return data as Bill[];
         }
         logApiNotice('getBills', error?.message);
@@ -455,7 +473,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('bill_adjustments').select('*').order('created_at', { ascending: false });
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
           return data as BillAdjustment[];
         }
         logApiNotice('getBillAdjustments', error?.message);
@@ -475,6 +493,19 @@ export const api = {
     idempotency_key?: string;
     caller_staff: StaffProfile;
   }): Promise<{ status: string; order_id: string; ticket_number: string; table_session_id?: string; parcel_id?: string; parcel_code?: string; bill_id: string }> {
+    // Proactively pre-register table in mockDb if needed so fallback is 100% immune to target table errors
+    if (params.table_id) {
+      const existing = mockDb.getTables().find((t) => t.id === params.table_id || t.table_number.toLowerCase() === params.table_id!.toLowerCase());
+      if (!existing) {
+        mockDb.syncTables([{
+          id: params.table_id,
+          table_number: params.table_id.length > 8 ? `T${mockDb.getTables().length + 1}` : params.table_id,
+          is_active: true,
+          created_at: new Date().toISOString(),
+        }]);
+      }
+    }
+
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.rpc('rpc_submit_order', {
