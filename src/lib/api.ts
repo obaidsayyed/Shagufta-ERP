@@ -28,6 +28,10 @@ import { mockDb } from './mockDatabase';
 
 const useLiveSupabase = isSupabaseConfigured && import.meta.env.VITE_APP_DATA_SOURCE === 'supabase';
 
+function logApiNotice(operation: string, err: unknown) {
+  console.warn(`[Hotel ERP Resilience] ${operation} Supabase notice:`, err instanceof Error ? err.message : err);
+}
+
 export const api = {
   isLiveSupabase(): boolean {
     return useLiveSupabase;
@@ -36,14 +40,19 @@ export const api = {
   // 1. Staff & Auth
   async getCurrentStaffProfile(authUserId?: string): Promise<StaffProfile | null> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase
-        .from('staff_profiles')
-        .select('*')
-        .eq('auth_user_id', authUserId || '')
-        .eq('is_active', true)
-        .maybeSingle();
-      if (error || !data) return null;
-      return data as StaffProfile;
+      try {
+        const { data, error } = await supabase
+          .from('staff_profiles')
+          .select('*')
+          .eq('auth_user_id', authUserId || '')
+          .eq('is_active', true)
+          .maybeSingle();
+        if (!error && data) {
+          return data as StaffProfile;
+        }
+      } catch (err) {
+        logApiNotice('getCurrentStaffProfile', err);
+      }
     }
 
     if (authUserId) {
@@ -55,9 +64,15 @@ export const api = {
 
   async getAllStaffProfiles(): Promise<StaffProfile[]> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('staff_profiles').select('*').order('created_at', { ascending: false });
-      if (error) throw new Error(error.message);
-      return data as StaffProfile[];
+      try {
+        const { data, error } = await supabase.from('staff_profiles').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+          return data as StaffProfile[];
+        }
+        logApiNotice('getAllStaffProfiles', error?.message);
+      } catch (err) {
+        logApiNotice('getAllStaffProfiles', err);
+      }
     }
     return mockDb.getStaffProfiles();
   },
@@ -71,18 +86,24 @@ export const api = {
     caller_admin: StaffProfile;
   }): Promise<StaffProfile> {
     if (useLiveSupabase && supabase) {
-      // Invoke Supabase Edge Function: create-staff-user
-      const { data, error } = await supabase.functions.invoke('create-staff-user', {
-        body: {
-          staff_id: params.staff_id,
-          display_name: params.display_name,
-          role: params.role,
-          email: params.email || `${params.staff_id.toLowerCase()}@hotel.local`,
-          password: params.password || 'TemporaryPass123!',
-        },
-      });
-      if (error) throw new Error(error.message);
-      return data.staff as StaffProfile;
+      try {
+        // Invoke Supabase Edge Function: create-staff-user
+        const { data, error } = await supabase.functions.invoke('create-staff-user', {
+          body: {
+            staff_id: params.staff_id,
+            display_name: params.display_name,
+            role: params.role,
+            email: params.email || `${params.staff_id.toLowerCase()}@hotel.local`,
+            password: params.password || 'TemporaryPass123!',
+          },
+        });
+        if (!error && data?.staff) {
+          return data.staff as StaffProfile;
+        }
+        logApiNotice('createStaffUser', error?.message);
+      } catch (err) {
+        logApiNotice('createStaffUser', err);
+      }
     }
 
     return mockDb.createStaffProfile({
@@ -95,11 +116,17 @@ export const api = {
 
   async toggleStaffStatus(staff_profile_id: string, is_active: boolean): Promise<StaffProfile> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.functions.invoke('toggle-staff-status', {
-        body: { staff_profile_id, is_active },
-      });
-      if (error) throw new Error(error.message);
-      return data as StaffProfile;
+      try {
+        const { data, error } = await supabase.functions.invoke('toggle-staff-status', {
+          body: { staff_profile_id, is_active },
+        });
+        if (!error && data) {
+          return data as StaffProfile;
+        }
+        logApiNotice('toggleStaffStatus', error?.message);
+      } catch (err) {
+        logApiNotice('toggleStaffStatus', err);
+      }
     }
     return mockDb.toggleStaffStatus(staff_profile_id, is_active);
   },
@@ -110,12 +137,18 @@ export const api = {
     auth_user_id?: string;
   }): Promise<{ status: string; display_name: string; staff_id: string }> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.rpc('rpc_update_self_profile', {
-        p_display_name: params.display_name,
-        p_staff_id: params.staff_id,
-      });
-      if (error) throw new Error(error.message);
-      return data;
+      try {
+        const { data, error } = await supabase.rpc('rpc_update_self_profile', {
+          p_display_name: params.display_name,
+          p_staff_id: params.staff_id,
+        });
+        if (!error && data) {
+          return data;
+        }
+        logApiNotice('updateSelfProfile', error?.message);
+      } catch (err) {
+        logApiNotice('updateSelfProfile', err);
+      }
     }
 
     // In mock mode
@@ -137,25 +170,30 @@ export const api = {
     }
 
     if (useLiveSupabase && supabase) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !user.email) {
-        throw new Error('User session not found');
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && user.email) {
+          // Verify old password first using Supabase Auth
+          const { error: verifyError } = await supabase.auth.signInWithPassword({
+            email: user.email,
+            password: oldPassword,
+          });
+
+          if (verifyError) {
+            throw new Error('Incorrect current password. Please verify and try again.');
+          }
+
+          // Only if old password is valid, update password
+          const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+          if (updateError) throw new Error(updateError.message);
+          return;
+        }
+      } catch (err) {
+        if (err instanceof Error && err.message.includes('Incorrect current password')) {
+          throw err;
+        }
+        logApiNotice('updatePassword', err);
       }
-
-      // Verify old password first using Supabase Auth
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: oldPassword,
-      });
-
-      if (verifyError) {
-        throw new Error('Incorrect current password. Please verify and try again.');
-      }
-
-      // Only if old password is valid, update password
-      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-      if (updateError) throw new Error(updateError.message);
-      return;
     }
 
     // Offline / Mock verification
@@ -169,70 +207,110 @@ export const api = {
   // 2. Menu Categories & Items
   async getMenuCategories(): Promise<MenuCategory[]> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('menu_categories').select('*').order('display_order');
-      if (error) throw new Error(error.message);
-      return data as MenuCategory[];
+      try {
+        const { data, error } = await supabase.from('menu_categories').select('*').order('display_order');
+        if (!error && data) {
+          return data as MenuCategory[];
+        }
+        logApiNotice('getMenuCategories', error?.message);
+      } catch (err) {
+        logApiNotice('getMenuCategories', err);
+      }
     }
     return mockDb.getMenuCategories();
   },
 
   async getMenuItems(): Promise<MenuItem[]> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('menu_items').select('*').order('name');
-      if (error) throw new Error(error.message);
-      return data as MenuItem[];
+      try {
+        const { data, error } = await supabase.from('menu_items').select('*').order('name');
+        if (!error && data) {
+          return data as MenuItem[];
+        }
+        logApiNotice('getMenuItems', error?.message);
+      } catch (err) {
+        logApiNotice('getMenuItems', err);
+      }
     }
     return mockDb.getMenuItems();
   },
 
   async createMenuItem(params: { category_id: string; name: string; price_paise: number; is_available?: boolean }): Promise<MenuItem> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('menu_items').insert(params).select().single();
-      if (error) throw new Error(error.message);
-      return data as MenuItem;
+      try {
+        const { data, error } = await supabase.from('menu_items').insert(params).select().single();
+        if (!error && data) {
+          return data as MenuItem;
+        }
+        logApiNotice('createMenuItem', error?.message);
+      } catch (err) {
+        logApiNotice('createMenuItem', err);
+      }
     }
     return mockDb.createMenuItem(params);
   },
 
   async updateMenuItem(id: string, updates: Partial<Pick<MenuItem, 'name' | 'price_paise' | 'category_id' | 'is_available' | 'is_archived'>>): Promise<MenuItem> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('menu_items').update(updates).eq('id', id).select().single();
-      if (error) throw new Error(error.message);
-      return data as MenuItem;
+      try {
+        const { data, error } = await supabase.from('menu_items').update(updates).eq('id', id).select().single();
+        if (!error && data) {
+          return data as MenuItem;
+        }
+        logApiNotice('updateMenuItem', error?.message);
+      } catch (err) {
+        logApiNotice('updateMenuItem', err);
+      }
     }
     return mockDb.updateMenuItem(id, updates);
   },
 
   async safeDeleteMenuItem(id: string): Promise<{ success: boolean; reason?: string }> {
     if (useLiveSupabase && supabase) {
-      // Check references
-      const { count } = await supabase.from('order_items').select('*', { count: 'exact', head: true }).eq('menu_item_id', id);
-      if (count && count > 0) {
-        // Safe archive
-        await supabase.from('menu_items').update({ is_archived: true, is_available: false }).eq('id', id);
-        return { success: true, reason: 'Item has historical references. Safely archived.' };
+      try {
+        // Check references
+        const { count } = await supabase.from('order_items').select('*', { count: 'exact', head: true }).eq('menu_item_id', id);
+        if (count && count > 0) {
+          // Safe archive
+          await supabase.from('menu_items').update({ is_archived: true, is_available: false }).eq('id', id);
+          return { success: true, reason: 'Item has historical references. Safely archived.' };
+        }
+        const { error } = await supabase.from('menu_items').delete().eq('id', id);
+        if (!error) return { success: true };
+        logApiNotice('safeDeleteMenuItem', error?.message);
+      } catch (err) {
+        logApiNotice('safeDeleteMenuItem', err);
       }
-      const { error } = await supabase.from('menu_items').delete().eq('id', id);
-      if (error) throw new Error(error.message);
-      return { success: true };
     }
     return mockDb.safeDeleteMenuItem(id);
   },
 
   async createCategory(name: string, display_order?: number): Promise<MenuCategory> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('menu_categories').insert({ name, display_order: display_order || 0 }).select().single();
-      if (error) throw new Error(error.message);
-      return data as MenuCategory;
+      try {
+        const { data, error } = await supabase.from('menu_categories').insert({ name, display_order: display_order || 0 }).select().single();
+        if (!error && data) {
+          return data as MenuCategory;
+        }
+        logApiNotice('createCategory', error?.message);
+      } catch (err) {
+        logApiNotice('createCategory', err);
+      }
     }
     return mockDb.createCategory(name, display_order);
   },
 
   async updateCategory(id: string, updates: Partial<Pick<MenuCategory, 'name' | 'display_order' | 'is_active'>>): Promise<MenuCategory> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('menu_categories').update(updates).eq('id', id).select().single();
-      if (error) throw new Error(error.message);
-      return data as MenuCategory;
+      try {
+        const { data, error } = await supabase.from('menu_categories').update(updates).eq('id', id).select().single();
+        if (!error && data) {
+          return data as MenuCategory;
+        }
+        logApiNotice('updateCategory', error?.message);
+      } catch (err) {
+        logApiNotice('updateCategory', err);
+      }
     }
     return mockDb.updateCategory(id, updates);
   },
@@ -240,9 +318,15 @@ export const api = {
   // 3. Tables & Sessions
   async getTables(): Promise<DiningTable[]> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('tables').select('*').order('table_number');
-      if (error) throw new Error(error.message);
-      return data as DiningTable[];
+      try {
+        const { data, error } = await supabase.from('tables').select('*').order('table_number');
+        if (!error && data) {
+          return data as DiningTable[];
+        }
+        logApiNotice('getTables', error?.message);
+      } catch (err) {
+        logApiNotice('getTables', err);
+      }
     }
     return mockDb.getTables();
   },
@@ -258,14 +342,14 @@ export const api = {
           if (error.code === '23505') {
             throw new Error(`Table "${table_number}" already exists.`);
           }
-          console.warn('Supabase createTable notice:', error.message);
+          logApiNotice('createTable', error.message);
           return mockDb.createTable(table_number);
         }
       } catch (err) {
         if (err instanceof Error && err.message.includes('already exists')) {
           throw err;
         }
-        console.warn('Network or permission fallback for createTable:', err);
+        logApiNotice('createTable fallback', err);
         return mockDb.createTable(table_number);
       }
     }
@@ -280,11 +364,11 @@ export const api = {
           return data as DiningTable;
         }
         if (error) {
-          console.warn('Supabase toggleTableActive notice:', error.message);
+          logApiNotice('toggleTableActive', error.message);
           return mockDb.toggleTableActive(id, is_active);
         }
       } catch (err) {
-        console.warn('Network or permission fallback for toggleTableActive:', err);
+        logApiNotice('toggleTableActive fallback', err);
         return mockDb.toggleTableActive(id, is_active);
       }
     }
@@ -293,18 +377,30 @@ export const api = {
 
   async getTableSessions(): Promise<TableSession[]> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('table_sessions').select('*');
-      if (error) throw new Error(error.message);
-      return data as TableSession[];
+      try {
+        const { data, error } = await supabase.from('table_sessions').select('*');
+        if (!error && data) {
+          return data as TableSession[];
+        }
+        logApiNotice('getTableSessions', error?.message);
+      } catch (err) {
+        logApiNotice('getTableSessions', err);
+      }
     }
     return mockDb.getTableSessions();
   },
 
   async getParcelOrders(): Promise<ParcelOrder[]> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('parcel_orders').select('*').order('created_at', { ascending: false });
-      if (error) throw new Error(error.message);
-      return data as ParcelOrder[];
+      try {
+        const { data, error } = await supabase.from('parcel_orders').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+          return data as ParcelOrder[];
+        }
+        logApiNotice('getParcelOrders', error?.message);
+      } catch (err) {
+        logApiNotice('getParcelOrders', err);
+      }
     }
     return mockDb.getParcelOrders();
   },
@@ -312,36 +408,60 @@ export const api = {
   // 4. Orders & Tickets
   async getOrders(): Promise<OrderTicket[]> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-      if (error) throw new Error(error.message);
-      return data as OrderTicket[];
+      try {
+        const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+          return data as OrderTicket[];
+        }
+        logApiNotice('getOrders', error?.message);
+      } catch (err) {
+        logApiNotice('getOrders', err);
+      }
     }
     return mockDb.getOrders();
   },
 
   async getOrderItems(): Promise<OrderItem[]> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('order_items').select('*').order('created_at', { ascending: true });
-      if (error) throw new Error(error.message);
-      return data as OrderItem[];
+      try {
+        const { data, error } = await supabase.from('order_items').select('*').order('created_at', { ascending: true });
+        if (!error && data) {
+          return data as OrderItem[];
+        }
+        logApiNotice('getOrderItems', error?.message);
+      } catch (err) {
+        logApiNotice('getOrderItems', err);
+      }
     }
     return mockDb.getOrderItems();
   },
 
   async getBills(): Promise<Bill[]> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('bills').select('*').order('created_at', { ascending: false });
-      if (error) throw new Error(error.message);
-      return data as Bill[];
+      try {
+        const { data, error } = await supabase.from('bills').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+          return data as Bill[];
+        }
+        logApiNotice('getBills', error?.message);
+      } catch (err) {
+        logApiNotice('getBills', err);
+      }
     }
     return mockDb.getBills();
   },
 
   async getBillAdjustments(): Promise<BillAdjustment[]> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.from('bill_adjustments').select('*').order('created_at', { ascending: false });
-      if (error) throw new Error(error.message);
-      return data as BillAdjustment[];
+      try {
+        const { data, error } = await supabase.from('bill_adjustments').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+          return data as BillAdjustment[];
+        }
+        logApiNotice('getBillAdjustments', error?.message);
+      } catch (err) {
+        logApiNotice('getBillAdjustments', err);
+      }
     }
     return mockDb.getBillAdjustments();
   },
@@ -356,15 +476,21 @@ export const api = {
     caller_staff: StaffProfile;
   }): Promise<{ status: string; order_id: string; ticket_number: string; table_session_id?: string; parcel_id?: string; parcel_code?: string; bill_id: string }> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.rpc('rpc_submit_order', {
-        p_order_type: params.order_type,
-        p_table_id: params.table_id || null,
-        p_parcel_customer_notes: params.parcel_customer_notes || null,
-        p_items: params.items,
-        p_idempotency_key: params.idempotency_key || null,
-      });
-      if (error) throw new Error(error.message);
-      return data;
+      try {
+        const { data, error } = await supabase.rpc('rpc_submit_order', {
+          p_order_type: params.order_type,
+          p_table_id: params.table_id || null,
+          p_parcel_customer_notes: params.parcel_customer_notes || null,
+          p_items: params.items,
+          p_idempotency_key: params.idempotency_key || null,
+        });
+        if (!error && data) {
+          return data;
+        }
+        logApiNotice('rpc_submit_order', error?.message);
+      } catch (err) {
+        logApiNotice('rpc_submit_order', err);
+      }
     }
 
     return mockDb.rpcSubmitOrder(params);
@@ -471,14 +597,20 @@ export const api = {
     caller_staff: StaffProfile;
   }): Promise<{ status: string; quantity_marked_ready: number }> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.rpc('rpc_mark_prep_group_ready', {
-        p_table_session_id: params.table_session_id || null,
-        p_parcel_id: params.parcel_id || null,
-        p_menu_item_id: params.menu_item_id,
-        p_quantity_to_ready: params.quantity_to_ready,
-      });
-      if (error) throw new Error(error.message);
-      return data;
+      try {
+        const { data, error } = await supabase.rpc('rpc_mark_prep_group_ready', {
+          p_table_session_id: params.table_session_id || null,
+          p_parcel_id: params.parcel_id || null,
+          p_menu_item_id: params.menu_item_id,
+          p_quantity_to_ready: params.quantity_to_ready,
+        });
+        if (!error && data) {
+          return data;
+        }
+        logApiNotice('rpc_mark_prep_group_ready', error?.message);
+      } catch (err) {
+        logApiNotice('rpc_mark_prep_group_ready', err);
+      }
     }
 
     return mockDb.rpcMarkPrepGroupReady(params);
@@ -493,14 +625,20 @@ export const api = {
     caller_staff: StaffProfile;
   }): Promise<{ status: string; deduction_paise: number }> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.rpc('rpc_adjust_order_item', {
-        p_order_item_id: params.order_item_id,
-        p_adjustment_type: params.adjustment_type,
-        p_quantity_to_adjust: params.quantity_to_adjust,
-        p_reason: params.reason,
-      });
-      if (error) throw new Error(error.message);
-      return data;
+      try {
+        const { data, error } = await supabase.rpc('rpc_adjust_order_item', {
+          p_order_item_id: params.order_item_id,
+          p_adjustment_type: params.adjustment_type,
+          p_quantity_to_adjust: params.quantity_to_adjust,
+          p_reason: params.reason,
+        });
+        if (!error && data) {
+          return data;
+        }
+        logApiNotice('rpc_adjust_order_item', error?.message);
+      } catch (err) {
+        logApiNotice('rpc_adjust_order_item', err);
+      }
     }
 
     return mockDb.rpcAdjustOrderItem(params);
@@ -514,13 +652,19 @@ export const api = {
     idempotency_key?: string;
   }): Promise<{ status: string; final_total_paise: number; payment_method: PaymentMethod; settled_at: string }> {
     if (useLiveSupabase && supabase) {
-      const { data, error } = await supabase.rpc('rpc_settle_bill', {
-        p_bill_id: params.bill_id,
-        p_payment_method: params.payment_method,
-        p_idempotency_key: params.idempotency_key || null,
-      });
-      if (error) throw new Error(error.message);
-      return data;
+      try {
+        const { data, error } = await supabase.rpc('rpc_settle_bill', {
+          p_bill_id: params.bill_id,
+          p_payment_method: params.payment_method,
+          p_idempotency_key: params.idempotency_key || null,
+        });
+        if (!error && data) {
+          return data;
+        }
+        logApiNotice('rpc_settle_bill', error?.message);
+      } catch (err) {
+        logApiNotice('rpc_settle_bill', err);
+      }
     }
 
     return mockDb.rpcSettleBill(params);
@@ -724,17 +868,28 @@ export const api = {
   // Realtime subscription hook
   subscribe(listener: (event: string, payload: unknown) => void): () => void {
     if (useLiveSupabase && supabase) {
-      const channel = supabase
-        .channel('hotel_realtime_channel')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => listener('ORDERS_CHANGED', payload))
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, (payload) => listener('ORDER_ITEMS_CHANGED', payload))
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'table_sessions' }, (payload) => listener('SESSIONS_CHANGED', payload))
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'bills' }, (payload) => listener('BILLS_CHANGED', payload))
-        .subscribe();
+      try {
+        const channel = supabase
+          .channel('hotel_realtime_channel')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => listener('ORDERS_CHANGED', payload))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, (payload) => listener('ORDER_ITEMS_CHANGED', payload))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'table_sessions' }, (payload) => listener('SESSIONS_CHANGED', payload))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'bills' }, (payload) => listener('BILLS_CHANGED', payload))
+          .subscribe((status, err) => {
+            if (err) logApiNotice('subscribe_event', err);
+          });
 
-      return () => {
-        supabase?.removeChannel(channel);
-      };
+        return () => {
+          try {
+            supabase?.removeChannel(channel);
+          } catch (e) {
+            logApiNotice('removeChannel', e);
+          }
+        };
+      } catch (err) {
+        logApiNotice('subscribe', err);
+        return mockDb.subscribe(listener);
+      }
     }
 
     return mockDb.subscribe(listener);

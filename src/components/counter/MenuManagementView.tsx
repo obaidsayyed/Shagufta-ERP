@@ -133,7 +133,7 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
         <div>
           <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Menu & Category Management</h2>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            Configure dishes, prices in paise, availability and operational food categories
+            Configure dishes, prices, availability and operational food categories
           </span>
         </div>
 
@@ -325,9 +325,6 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                     style={{ width: '100%' }}
                     required
                   />
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    Stored in database as {newDishPriceRupees ? rupeesToPaise(newDishPriceRupees) : 0} paise.
-                  </span>
                 </div>
               </div>
 
