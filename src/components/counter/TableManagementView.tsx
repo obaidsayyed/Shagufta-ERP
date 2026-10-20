@@ -37,6 +37,11 @@ export const TableManagementView: React.FC<TableManagementViewProps> = ({
     setNoticeMessage('');
     try {
       await api.toggleTableActive(tbl.id, !tbl.is_active);
+      const cleanNum = tbl.table_number.replace(/\s*\(2\)\s*$/, '').trim().toLowerCase();
+      const c2 = tables.find((t) => t.table_number.trim().toLowerCase() === `${cleanNum} (2)`);
+      if (c2) {
+        await api.toggleTableActive(c2.id, !tbl.is_active);
+      }
       setNoticeMessage(`Table ${tbl.table_number} status updated.`);
       onTablesUpdated();
     } catch (err: unknown) {

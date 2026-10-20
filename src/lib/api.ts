@@ -357,6 +357,17 @@ export const api = {
         const { data, error } = await supabase.from('tables').insert({ table_number: cleanNum }).select().single();
         if (!error && data) {
           mockDb.syncTables([data as DiningTable]);
+          if (!cleanNum.includes('(2)')) {
+            const slotNum = `${cleanNum} (2)`;
+            try {
+              const { data: slotData } = await supabase.from('tables').insert({ table_number: slotNum, is_active: true }).select().single();
+              if (slotData) {
+                mockDb.syncTables([slotData as DiningTable]);
+              }
+            } catch (slotErr) {
+              logApiNotice('createTable companion slot', slotErr);
+            }
+          }
           return data as DiningTable;
         }
         if (error) {
@@ -372,7 +383,11 @@ export const api = {
         logApiNotice('createTable fallback', err);
       }
     }
-    return mockDb.createTable(cleanNum);
+    const created = mockDb.createTable(cleanNum);
+    if (!cleanNum.includes('(2)')) {
+      mockDb.createTable(`${cleanNum} (2)`);
+    }
+    return created;
   },
 
   async toggleTableActive(id: string, is_active: boolean): Promise<DiningTable> {
@@ -485,10 +500,11 @@ export const api = {
   },
 
   async getOrCreateCustomer2Table(baseTable: DiningTable): Promise<DiningTable> {
-    const targetNum = `${baseTable.table_number.trim()} (2)`;
+    const cleanBase = baseTable.table_number.replace(/\s*\(2\)\s*$/, '').trim();
+    const targetNum = `${cleanBase} (2)`;
     const allTables = await this.getTables();
     const existing = allTables.find(
-      (t) => t.table_number.toLowerCase() === targetNum.toLowerCase()
+      (t) => t.table_number.trim().toLowerCase() === targetNum.toLowerCase()
     );
     if (existing) {
       if (!existing.is_active) {
@@ -502,7 +518,7 @@ export const api = {
     } catch {
       const refreshed = await this.getTables();
       const found = refreshed.find(
-        (t) => t.table_number.toLowerCase() === targetNum.toLowerCase()
+        (t) => t.table_number.trim().toLowerCase() === targetNum.toLowerCase()
       );
       if (found) return found;
       return mockDb.createTable(targetNum);
@@ -576,18 +592,19 @@ export const api = {
     orders: OrderTicket[],
     orderItems: OrderItem[],
     tables: DiningTable[],
-    parcels: ParcelOrder[]
+    parcels: ParcelOrder[],
+    sessions?: TableSession[]
   ): KitchenPreparationGroup[] {
     const tableMap = new Map(tables.map((t) => [t.id, t.table_number]));
     const parcelMap = new Map(parcels.map((p) => [p.id, p.parcel_code]));
 
     // Find table_id from table_sessions with (2) suffix for 2nd customer
-    const sessions = mockDb.getTableSessions();
-    const sessionTableMap = new Map(sessions.map((s) => {
+    const sessionList = (sessions && sessions.length > 0) ? sessions : mockDb.getTableSessions();
+    const sessionTableMap = new Map(sessionList.map((s) => {
       const base = tableMap.get(s.table_id) || 'Table';
-      const name = base.includes('(2)') || s.customer_number === 2
-        ? (base.includes('(2)') ? base : `${base} (2)`)
-        : base;
+      const cleanBase = base.replace(/\s*\(2\)\s*$/, '').trim();
+      const isCust2 = base.includes('(2)') || s.customer_number === 2;
+      const name = isCust2 ? `${cleanBase} (2)` : cleanBase;
       return [s.id, name];
     }));
 
@@ -598,11 +615,11 @@ export const api = {
       if (activePending <= 0) continue; // Skip items with no pending quantities
 
       const parentOrder = orders.find((o) => o.id === item.order_id);
-      if (!parentOrder || parentOrder.status === 'cancelled') continue;
+      if (parentOrder && parentOrder.status === 'cancelled') continue;
 
-      const orderType = parentOrder.order_type;
-      const sessionKey = parentOrder.table_session_id || '';
-      const parcelKey = parentOrder.parcel_id || '';
+      const orderType = parentOrder?.order_type || (item.table_session_id ? 'dine_in' : 'parcel');
+      const sessionKey = parentOrder?.table_session_id || item.table_session_id || '';
+      const parcelKey = parentOrder?.parcel_id || item.parcel_id || '';
 
       // Group key binds session/parcel + dish
       const groupKey = orderType === 'dine_in'

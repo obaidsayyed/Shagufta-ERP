@@ -81,15 +81,28 @@ export const WaiterView: React.FC = () => {
 
   const baseTables = tables.filter((t) => !t.table_number.includes('(2)'));
   const selectedTable = tables.find((t) => t.id === selectedTableId);
-  const c2Table = selectedTable ? tables.find((t) => t.table_number.toLowerCase() === `${selectedTable.table_number.toLowerCase()} (2)`) : null;
+  const cleanSelectedNum = selectedTable?.table_number.replace(/\s*\(2\)\s*$/, '').trim().toLowerCase();
+  const c2Table = selectedTable ? tables.find((t) => {
+    const cleanT = t.table_number.replace(/\s*\(2\)\s*$/, '').trim().toLowerCase();
+    return cleanT === cleanSelectedNum && t.table_number.includes('(2)');
+  }) : null;
 
-  const customer1Session = selectedTable ? tableSessions.find(
-    (s) => s.table_id === selectedTable.id && s.session_status === 'open' && (s.customer_number || 1) === 1
-  ) : null;
+  const customer1Session = selectedTable ? tableSessions.find((s) => {
+    if (s.session_status !== 'open') return false;
+    if (s.table_id === selectedTable.id && (s.customer_number === undefined || s.customer_number === null || s.customer_number === 1)) return true;
+    const sessTbl = tables.find((t) => t.id === s.table_id);
+    if (sessTbl && sessTbl.table_number.trim().toLowerCase() === cleanSelectedNum && !sessTbl.table_number.includes('(2)')) return true;
+    return false;
+  }) : null;
 
-  const customer2Session = selectedTable ? tableSessions.find(
-    (s) => ((c2Table && s.table_id === c2Table.id) || (s.table_id === selectedTable.id && s.customer_number === 2)) && s.session_status === 'open'
-  ) : null;
+  const customer2Session = selectedTable ? tableSessions.find((s) => {
+    if (s.session_status !== 'open') return false;
+    if (c2Table && s.table_id === c2Table.id) return true;
+    if (s.table_id === selectedTable.id && s.customer_number === 2) return true;
+    const sessTbl = tables.find((t) => t.id === s.table_id);
+    if (sessTbl && sessTbl.table_number.trim().toLowerCase() === `${cleanSelectedNum} (2)`) return true;
+    return false;
+  }) : null;
 
   const currentSession = selectedCustomerNumber === 1 ? customer1Session : customer2Session;
   const currentDisplayTable = selectedCustomerNumber === 2
@@ -155,9 +168,11 @@ export const WaiterView: React.FC = () => {
       // Generate idempotency key for this atomic submission
       const idempotency_key = `wtr_${selectedTableId}_c${selectedCustomerNumber}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
+      const targetTableId = (selectedCustomerNumber === 2 && c2Table) ? c2Table.id : selectedTableId;
+
       const result = await api.submitOrder({
         order_type: 'dine_in',
-        table_id: selectedTableId,
+        table_id: targetTableId,
         customer_number: selectedCustomerNumber,
         items: itemsPayload,
         idempotency_key,
@@ -184,8 +199,12 @@ export const WaiterView: React.FC = () => {
     ? orders.filter((o) => o.table_session_id === currentSession.id)
     : [];
 
+  const sessionOrderIds = new Set(tableSessionOrders.map((o) => o.id));
   const tableSessionOrderItems = currentSession
-    ? orderItems.filter((oi) => oi.table_session_id === currentSession.id)
+    ? orderItems.filter((oi) => 
+        oi.table_session_id === currentSession.id || 
+        (oi.order_id && sessionOrderIds.has(oi.order_id))
+      )
     : [];
 
   return (
@@ -217,12 +236,20 @@ export const WaiterView: React.FC = () => {
             ) : (
               <div className="table-square-grid">
                 {baseTables.map((tbl) => {
-                  const c2 = tables.find((t) => t.table_number.toLowerCase() === `${tbl.table_number.toLowerCase()} (2)`);
+                  const cleanTblNum = tbl.table_number.replace(/\s*\(2\)\s*$/, '').trim().toLowerCase();
+                  const c2 = tables.find((t) => {
+                    const cleanT = t.table_number.replace(/\s*\(2\)\s*$/, '').trim().toLowerCase();
+                    return cleanT === cleanTblNum && t.table_number.includes('(2)');
+                  });
                   const s1 = tableSessions.find((s) => s.table_id === tbl.id && s.session_status === 'open');
-                  const s2 = c2 ? tableSessions.find((s) => s.table_id === c2.id && s.session_status === 'open') : null;
-                  const mockS2 = tableSessions.find((s) => s.table_id === tbl.id && s.customer_number === 2 && s.session_status === 'open');
-                  const activeCust2 = s2 || mockS2;
-                  const count = (s1 ? 1 : 0) + (activeCust2 ? 1 : 0);
+                  const s2 = tableSessions.find((s) => {
+                    if (s.session_status !== 'open') return false;
+                    if (c2 && s.table_id === c2.id) return true;
+                    if (s.table_id === tbl.id && s.customer_number === 2) return true;
+                    const st = tables.find((t) => t.id === s.table_id);
+                    return st && st.table_number.trim().toLowerCase() === `${cleanTblNum} (2)`;
+                  });
+                  const count = (s1 ? 1 : 0) + (s2 ? 1 : 0);
                   const isFull = count >= 2;
                   const isOccupied = count > 0;
                   return (
@@ -233,6 +260,8 @@ export const WaiterView: React.FC = () => {
                       onClick={() => {
                         setSelectedTableId(tbl.id);
                         setSelectedCustomerNumber(1);
+                        setCart1({});
+                        setCart2({});
                         setSubmitSuccessTicket(null);
                         setErrorMessage('');
                       }}
@@ -311,6 +340,8 @@ export const WaiterView: React.FC = () => {
               className="btn-secondary"
               onClick={() => {
                 setSelectedTableId('');
+                setCart1({});
+                setCart2({});
                 setSubmitSuccessTicket(null);
                 setErrorMessage('');
               }}

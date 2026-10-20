@@ -43,11 +43,12 @@ export const KitchenView: React.FC = () => {
 
   const loadData = async (isInitialLoad = false) => {
     try {
-      const [oList, oiList, tList, pList] = await Promise.all([
+      const [oList, oiList, tList, pList, sList] = await Promise.all([
         api.getOrders(),
         api.getOrderItems(),
         api.getTables(),
         api.getParcelOrders(),
+        api.getTableSessions(),
       ]);
 
       if (isInitialLoad) {
@@ -60,8 +61,8 @@ export const KitchenView: React.FC = () => {
       setTables(tList);
       setParcels(pList);
 
-      // Compute grouped preparation items
-      const groups = api.getKitchenPreparationGroups(oList, oiList, tList, pList);
+      // Compute grouped preparation items with table sessions
+      const groups = api.getKitchenPreparationGroups(oList, oiList, tList, pList, sList);
       setPrepGroups(groups);
     } catch (err: unknown) {
       console.error('Error loading kitchen orders:', err);

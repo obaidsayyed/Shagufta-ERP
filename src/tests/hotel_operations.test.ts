@@ -689,4 +689,87 @@ describe('Hotel Order Management System — Comprehensive Operational Tests', ()
     expect(vegKolhapuri).toBeDefined();
     expect(vegKolhapuri?.price_paise).toBe(22050);
   });
+
+  // TEST 14 — Parallel customer ordering on same table: separate kitchen tickets, active preparation & billing
+  it('Test 14: Parallel customer ordering on same table displays separate kitchen items and active preparation without collision', async () => {
+    const table = mockDb.getTables()[0]; // T1
+    const roti = mockDb.getMenuItems().find((m) => m.name === 'Butter Roti')!;
+    const dal = mockDb.getMenuItems().find((m) => m.name === 'Dal Tadka')!;
+    const paneer = mockDb.getMenuItems().find((m) => m.name === 'Paneer Butter Masala')!;
+
+    // 1. Submit order for Customer 1
+    const cust1Res = mockDb.rpcSubmitOrder({
+      order_type: 'dine_in',
+      table_id: table.id,
+      customer_number: 1,
+      items: [{ menu_item_id: roti.id, quantity: 3 }],
+      caller_staff: waiterStaff,
+    });
+    expect(cust1Res.status).toBe('success');
+
+    // 2. Submit order for Customer 2 on the same physical table
+    const cust2Res = mockDb.rpcSubmitOrder({
+      order_type: 'dine_in',
+      table_id: table.id,
+      customer_number: 2,
+      items: [{ menu_item_id: dal.id, quantity: 1 }, { menu_item_id: paneer.id, quantity: 1 }],
+      caller_staff: waiterStaff,
+    });
+    expect(cust2Res.status).toBe('success');
+
+    // 3. Verify distinct sessions
+    expect(cust1Res.table_session_id).not.toBe(cust2Res.table_session_id);
+
+    // 4. Verify Waiter View Active Kitchen Preparation resolution for each customer
+    const allOrderItems = mockDb.getOrderItems();
+    const cust1ActiveItems = allOrderItems.filter((oi) => oi.table_session_id === cust1Res.table_session_id);
+    const cust2ActiveItems = allOrderItems.filter((oi) => oi.table_session_id === cust2Res.table_session_id);
+
+    expect(cust1ActiveItems.length).toBe(1);
+    expect(cust1ActiveItems[0].dish_name).toBe('Butter Roti');
+    expect(cust1ActiveItems[0].ordered_quantity).toBe(3);
+
+    expect(cust2ActiveItems.length).toBe(2);
+    expect(cust2ActiveItems.map((i) => i.dish_name)).toContain('Dal Tadka');
+    expect(cust2ActiveItems.map((i) => i.dish_name)).toContain('Paneer Butter Masala');
+
+    // 5. Verify Kitchen View groups items separately with (2) suffix for customer 2
+    const prepGroups = api.getKitchenPreparationGroups(
+      mockDb.getOrders(),
+      mockDb.getOrderItems(),
+      mockDb.getTables(),
+      mockDb.getParcelOrders(),
+      mockDb.getTableSessions()
+    );
+
+    const cust1Groups = prepGroups.filter((g) => g.table_session_id === cust1Res.table_session_id);
+    const cust2Groups = prepGroups.filter((g) => g.table_session_id === cust2Res.table_session_id);
+
+    expect(cust1Groups.length).toBe(1);
+    expect(cust1Groups[0].table_number).toBe(table.table_number);
+    expect(cust1Groups[0].dish_name).toBe('Butter Roti');
+
+    expect(cust2Groups.length).toBe(2);
+    for (const g of cust2Groups) {
+      expect(g.table_number).toBe(`${table.table_number} (2)`);
+    }
+
+    // 6. Verify Chef can mark Customer 2 item ready without affecting Customer 1
+    const dalGroup = cust2Groups.find((g) => g.dish_name === 'Dal Tadka')!;
+    mockDb.rpcMarkPrepGroupReady({
+      table_session_id: cust2Res.table_session_id,
+      menu_item_id: dal.id,
+      quantity_to_ready: 1,
+      caller_staff: chefStaff,
+    });
+
+    const refreshedItems = mockDb.getOrderItems();
+    const readyDal = refreshedItems.find((oi) => oi.table_session_id === cust2Res.table_session_id && oi.dish_name === 'Dal Tadka')!;
+    expect(readyDal.prepared_quantity).toBe(1);
+    expect(readyDal.status).toBe('ready');
+
+    const unreadyRoti = refreshedItems.find((oi) => oi.table_session_id === cust1Res.table_session_id && oi.dish_name === 'Butter Roti')!;
+    expect(unreadyRoti.prepared_quantity).toBe(0);
+    expect(unreadyRoti.status).toBe('pending');
+  });
 });
