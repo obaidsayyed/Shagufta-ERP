@@ -119,7 +119,7 @@ export const HistoricalBillsView: React.FC<HistoricalBillsViewProps> = ({
       </div>
 
       {/* Bills Table */}
-      <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="panel table-responsive" style={{ padding: 0 }}>
         {filteredBills.length === 0 ? (
           <div style={{ padding: '36px', textAlign: 'center', color: 'var(--text-muted)' }}>
             <Receipt size={28} style={{ margin: '0 auto 8px', opacity: 0.4 }} />

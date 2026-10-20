@@ -66,67 +66,69 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
             {orderItems.length === 0 ? (
               <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>No dishes ordered yet.</p>
             ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>Item</th>
-                    <th style={{ textAlign: 'center' }}>Qty</th>
-                    <th style={{ textAlign: 'center' }}>Kitchen Prep</th>
-                    <th style={{ textAlign: 'right' }}>Price</th>
-                    <th style={{ textAlign: 'right' }}>Total</th>
-                    {!isSettled && <th style={{ textAlign: 'center' }}>Action</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {orderItems.map((item) => {
-                    const activeQty = item.ordered_quantity - item.cancelled_quantity;
-                    const lineTotal = activeQty * item.unit_price_paise;
-                    return (
-                      <tr key={item.id} style={{ opacity: item.status === 'cancelled' ? 0.6 : 1 }}>
-                        <td>
-                          <div style={{ fontWeight: 600 }}>{item.dish_name}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.category_name}</div>
-                        </td>
-                        <td style={{ textAlign: 'center', fontWeight: 600 }}>
-                          {activeQty}
-                          {item.cancelled_quantity > 0 && (
-                            <span style={{ fontSize: '10px', color: 'var(--danger)', display: 'block' }}>
-                              (-{item.cancelled_quantity} cancl)
-                            </span>
-                          )}
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                          {item.prepared_quantity >= activeQty && activeQty > 0 ? (
-                            <span className="badge badge-ready" style={{ fontSize: '10px' }}>Ready</span>
-                          ) : item.cancelled_quantity === item.ordered_quantity ? (
-                            <span className="badge badge-danger" style={{ fontSize: '10px' }}>Cancelled</span>
-                          ) : (
-                            <span className="badge badge-pending" style={{ fontSize: '10px' }}>
-                              {item.prepared_quantity}/{activeQty} Prep
-                            </span>
-                          )}
-                        </td>
-                        <td style={{ textAlign: 'right' }}>{formatPaiseToINR(item.unit_price_paise)}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 700 }}>{formatPaiseToINR(lineTotal)}</td>
-                        {!isSettled && (
-                          <td style={{ textAlign: 'center' }}>
-                            {activeQty > 0 && (
-                              <button
-                                type="button"
-                                className="btn-secondary btn-sm"
-                                style={{ fontSize: '11px', padding: '2px 6px' }}
-                                onClick={() => onOpenAdjustment(item)}
-                              >
-                                Adjust
-                              </button>
+              <div className="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th style={{ textAlign: 'center' }}>Qty</th>
+                      <th style={{ textAlign: 'center' }}>Kitchen Prep</th>
+                      <th style={{ textAlign: 'right' }}>Price</th>
+                      <th style={{ textAlign: 'right' }}>Total</th>
+                      {!isSettled && <th style={{ textAlign: 'center' }}>Action</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orderItems.map((item) => {
+                      const activeQty = item.ordered_quantity - item.cancelled_quantity;
+                      const lineTotal = activeQty * item.unit_price_paise;
+                      return (
+                        <tr key={item.id} style={{ opacity: item.status === 'cancelled' ? 0.6 : 1 }}>
+                          <td>
+                            <div style={{ fontWeight: 600 }}>{item.dish_name}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.category_name}</div>
+                          </td>
+                          <td style={{ textAlign: 'center', fontWeight: 600 }}>
+                            {activeQty}
+                            {item.cancelled_quantity > 0 && (
+                              <span style={{ fontSize: '10px', color: 'var(--danger)', display: 'block' }}>
+                                (-{item.cancelled_quantity} cancl)
+                              </span>
                             )}
                           </td>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          <td style={{ textAlign: 'center' }}>
+                            {item.prepared_quantity >= activeQty && activeQty > 0 ? (
+                              <span className="badge badge-ready" style={{ fontSize: '10px' }}>Ready</span>
+                            ) : item.cancelled_quantity === item.ordered_quantity ? (
+                              <span className="badge badge-danger" style={{ fontSize: '10px' }}>Cancelled</span>
+                            ) : (
+                              <span className="badge badge-pending" style={{ fontSize: '10px' }}>
+                                {item.prepared_quantity}/{activeQty} Prep
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ textAlign: 'right' }}>{formatPaiseToINR(item.unit_price_paise)}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 700 }}>{formatPaiseToINR(lineTotal)}</td>
+                          {!isSettled && (
+                            <td style={{ textAlign: 'center' }}>
+                              {activeQty > 0 && (
+                                <button
+                                  type="button"
+                                  className="btn-secondary btn-sm"
+                                  style={{ fontSize: '11px', padding: '2px 6px' }}
+                                  onClick={() => onOpenAdjustment(item)}
+                                >
+                                  Adjust
+                                </button>
+                              )}
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 

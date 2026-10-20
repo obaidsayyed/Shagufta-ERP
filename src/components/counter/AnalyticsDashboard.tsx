@@ -180,7 +180,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       </div>
 
       {/* Tabs for Overview Trends vs Dish Performance vs Category Breakdown */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
         <button
           type="button"
           className={`btn-sm ${activeTab === 'overview' ? 'btn-primary' : 'btn-secondary'}`}
@@ -206,7 +206,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Tab 1: Daily Revenue Trends */}
       {activeTab === 'overview' && (
-        <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="panel table-responsive" style={{ padding: 0 }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)', fontWeight: 700 }}>
             Daily Settlement Breakdown
           </div>
@@ -243,7 +243,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Tab 2: Category-Aware Dish Performance */}
       {activeTab === 'dishes' && (
-        <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="panel table-responsive" style={{ padding: 0 }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: 700 }}>Individual Dish Sales & Category Share</span>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
@@ -308,7 +308,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Tab 3: Category Share Breakdown */}
       {activeTab === 'categories' && (
-        <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="panel table-responsive" style={{ padding: 0 }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)', fontWeight: 700 }}>
             Operational Category Performance
           </div>

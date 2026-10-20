@@ -17,7 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="app-header">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div className="header-brand-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {/* Sidebar Toggle Button: Visible strictly for Admin */}
         {role === 'admin' && (
           <button
@@ -25,9 +25,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={onToggleSidebar}
             title={isSidebarOpen ? 'Collapse Navigation Sidebar' : 'Expand Navigation Sidebar'}
             className="btn-secondary btn-sm"
-            style={{ padding: '6px', minHeight: '34px', width: '34px' }}
+            style={{ padding: '6px', minHeight: '32px', width: '32px' }}
           >
-            {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeft size={18} />}
+            {isSidebarOpen ? <PanelLeftClose size={17} /> : <PanelLeft size={17} />}
           </button>
         )}
 
@@ -41,7 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Current Staff Badge & Logout */}
       {currentStaff && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="header-user-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             type="button"
             className="btn-secondary btn-sm"
@@ -51,8 +51,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '5px 12px',
-              minHeight: '34px',
+              padding: '4px 10px',
+              minHeight: '32px',
             }}
           >
             {role === 'admin' ? (
@@ -61,7 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <User size={14} color="var(--text-secondary)" />
             )}
             <span style={{ fontWeight: 600 }}>{currentStaff.display_name}</span>
-            <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>({currentStaff.staff_id})</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>({currentStaff.staff_id})</span>
           </button>
 
           <button
@@ -69,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="btn-secondary btn-sm"
             onClick={logout}
             title="Log out"
-            style={{ minHeight: '34px', padding: '5px 12px' }}
+            style={{ minHeight: '32px', padding: '4px 10px' }}
           >
             <LogOut size={14} />
             <span>Exit</span>

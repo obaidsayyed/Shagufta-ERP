@@ -168,12 +168,9 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
                   >
                     <div>
                       <div style={{ fontWeight: 700, fontSize: '13px', color: '#0F172A' }}>{dish.name}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                      <div style={{ marginTop: '2px' }}>
                         <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>
                           {formatPaiseToINR(dish.price_paise)}
-                        </span>
-                        <span className="modifier-chip" style={{ fontSize: '10px', padding: '1px 5px' }}>
-                          Extra Gravy
                         </span>
                       </div>
                     </div>

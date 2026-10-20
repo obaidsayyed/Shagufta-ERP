@@ -353,7 +353,7 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+      <div className="responsive-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
         <div>
           <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Menu & Category Management</h2>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
@@ -361,7 +361,7 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div className="responsive-btn-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button type="button" className="btn-secondary" onClick={() => setShowImportModal(true)}>
             <Upload size={14} />
             Add via File (CSV / Excel)
@@ -418,7 +418,7 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
       </div>
 
       {/* Dishes Table */}
-      <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="panel table-responsive" style={{ padding: 0 }}>
         <table>
           <thead>
             <tr>
@@ -819,9 +819,11 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                   </div>
 
                   <div
+                    className="table-responsive"
                     style={{
                       maxHeight: '220px',
                       overflowY: 'auto',
+                      overflowX: 'auto',
                       border: '1px solid var(--border-subtle)',
                       borderRadius: '8px',
                       backgroundColor: 'var(--bg-surface)',

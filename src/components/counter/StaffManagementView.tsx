@@ -92,7 +92,7 @@ export const StaffManagementView: React.FC<StaffManagementViewProps> = ({
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+      <div className="responsive-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
         <div>
           <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Staff & Role Administration</h2>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
@@ -126,7 +126,7 @@ export const StaffManagementView: React.FC<StaffManagementViewProps> = ({
       )}
 
       {/* Staff Table */}
-      <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="panel table-responsive" style={{ padding: 0 }}>
         <table>
           <thead>
             <tr>

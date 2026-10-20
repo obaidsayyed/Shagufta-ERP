@@ -566,20 +566,10 @@ export const WaiterView: React.FC = () => {
                           <div className="dish-price">
                             {formatPaiseToINR(dish.price_paise)}
                           </div>
-
-                          {/* Quick Modifiers / Add-on Accents (Spicy Amber Yellow) */}
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
-                            <span className="modifier-chip" title="Add special modifier note">
-                              Extra Gravy
-                            </span>
-                            <span className="modifier-chip" title="Add special modifier note">
-                              Spicy
-                            </span>
-                          </div>
                         </div>
 
                         {/* Add / Quantity Controller */}
-                        <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                        <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
                           {qtyInCart > 0 ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                               <button
