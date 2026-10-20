@@ -27,7 +27,12 @@ export const HistoricalBillsView: React.FC<HistoricalBillsViewProps> = ({
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
 
   const tableMap = new Map(tables.map((t) => [t.id, t.table_number]));
-  const sessionTableMap = new Map(tableSessions.map((s) => [s.id, tableMap.get(s.table_id) || 'Table']));
+  const sessionTableMap = new Map(
+    tableSessions.map((s) => {
+      const base = tableMap.get(s.table_id) || 'Table';
+      return [s.id, s.customer_number === 2 ? `${base} (2)` : base];
+    })
+  );
   const parcelMap = new Map(parcelOrders.map((p) => [p.id, p.parcel_code]));
 
   const getTargetTitle = (b: Bill) => {

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { mockDb } from '../lib/mockDatabase';
 import { api } from '../lib/api';
 import { StaffProfile } from '../types/database';
+import { rupeesToPaise } from '../lib/currency';
 
 describe('Hotel Order Management System — Comprehensive Operational Tests', () => {
   let adminStaff: StaffProfile;
@@ -529,5 +530,162 @@ describe('Hotel Order Management System — Comprehensive Operational Tests', ()
     const updatedBill = mockDb.getBills().find((b) => b.id === bill.id)!;
     expect(updatedBill.status).toBe('settled');
     expect(updatedBill.payment_method).toBe('cash');
+  });
+
+  // TEST 12 — Two customers on a single table & capacity limit
+  it('Test 12: Allocates up to 2 customers per table with (2) suffix, enforces max 2 limit, and settles separately', async () => {
+    const table = mockDb.getTables()[2]; // e.g. T3
+    const roti = mockDb.getMenuItems().find((m) => m.name === 'Butter Roti')!;
+    const paneer = mockDb.getMenuItems().find((m) => m.name === 'Paneer Butter Masala')!;
+
+    // 1. Allocate Customer 1 on table
+    const cust1Res = mockDb.rpcSubmitOrder({
+      order_type: 'dine_in',
+      table_id: table.id,
+      customer_number: 1,
+      items: [{ menu_item_id: roti.id, quantity: 2 }],
+      caller_staff: waiterStaff,
+    });
+
+    const cust1Session = mockDb.getTableSessions().find((s) => s.id === cust1Res.table_session_id)!;
+    expect(cust1Session.customer_number).toBe(1);
+    const cust1Bill = mockDb.getBills().find((b) => b.id === cust1Res.bill_id)!;
+    expect(cust1Bill.bill_number).toContain(table.table_number);
+    expect(cust1Bill.bill_number).not.toContain('(2)');
+
+    // 2. Allocate Customer 2 on the SAME table
+    const cust2Res = mockDb.rpcSubmitOrder({
+      order_type: 'dine_in',
+      table_id: table.id,
+      customer_number: 2,
+      items: [{ menu_item_id: paneer.id, quantity: 1 }],
+      caller_staff: waiterStaff,
+    });
+
+    const cust2Session = mockDb.getTableSessions().find((s) => s.id === cust2Res.table_session_id)!;
+    expect(cust2Session.customer_number).toBe(2);
+    expect(cust1Session.id).not.toBe(cust2Session.id); // distinct sessions!
+
+    const cust2Bill = mockDb.getBills().find((b) => b.id === cust2Res.bill_id)!;
+    // Suffix (2) must be present for customer 2!
+    expect(cust2Bill.bill_number).toContain(`${table.table_number} (2)`);
+
+    // Verify Kitchen tickets show (2) suffix for customer 2
+    const prepGroups = api.getKitchenPreparationGroups(
+      mockDb.getOrders(),
+      mockDb.getOrderItems(),
+      mockDb.getTables(),
+      mockDb.getParcelOrders()
+    );
+    const cust2Prep = prepGroups.find((g) => g.table_number === `${table.table_number} (2)`);
+    expect(cust2Prep).toBeDefined();
+    expect(cust2Prep?.dish_name).toBe('Paneer Butter Masala');
+
+    // 3. Customer 1 existing session can receive more orders without problem
+    expect(() => {
+      mockDb.rpcSubmitOrder({
+        order_type: 'dine_in',
+        table_id: table.id,
+        customer_number: 1,
+        items: [{ menu_item_id: roti.id, quantity: 1 }],
+        caller_staff: waiterStaff,
+      });
+    }).not.toThrow();
+
+    // Verify open sessions count for this table is exactly 2
+    const openSessions = mockDb.getTableSessions().filter((s) => s.table_id === table.id && s.session_status === 'open');
+    expect(openSessions.length).toBe(2);
+
+    // If attempting to open a 3rd customer session on the table -> must throw error
+    expect(() => {
+      mockDb.rpcSubmitOrder({
+        order_type: 'dine_in',
+        table_id: table.id,
+        customer_number: 3, // Prohibited!
+        items: [{ menu_item_id: roti.id, quantity: 1 }],
+        caller_staff: waiterStaff,
+      });
+    }).toThrow(/Table capacity reached: A table cannot accommodate more than 2 customers/);
+
+    // 4. Settle Customer 1
+    mockDb.rpcSettleBill({
+      bill_id: cust1Bill.id,
+      payment_method: 'cash',
+      caller_staff: adminStaff,
+    });
+
+    expect(cust1Bill.status).toBe('settled');
+    // Customer 2 session is still open and running
+    expect(cust2Bill.status).toBe('unsettled');
+    const remainingOpenSessions = mockDb.getTableSessions().filter((s) => s.table_id === table.id && s.session_status === 'open');
+    expect(remainingOpenSessions.length).toBe(1);
+    expect(remainingOpenSessions[0].id).toBe(cust2Session.id);
+
+    // Settle Customer 2
+    mockDb.rpcSettleBill({
+      bill_id: cust2Bill.id,
+      payment_method: 'online',
+      caller_staff: adminStaff,
+    });
+    expect(cust2Bill.status).toBe('settled');
+  });
+
+  // TEST 13 — Bulk menu file import (CSV / Excel 3-column parser)
+  it('Test 13: Bulk menu item parser accepts 3 columns in any order and correctly creates categories and items', async () => {
+    // Test parsing with columns in different order: price, name, category
+    const sampleRows = [
+      ['price', 'name', 'category'],
+      [180, 'Crispy Corn', 'Appetizers'],
+      ['220.50', 'Veg Kolhapuri', 'Curries'],
+      ['45', 'Tandoori Roti', 'Breads'],
+    ];
+
+    // Normalize and column mapping logic
+    const normalize = (str: any) => String(str || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+    const header = sampleRows[0];
+    let nameIdx = -1, catIdx = -1, priceIdx = -1;
+    header.forEach((col, idx) => {
+      const n = normalize(col);
+      if (n === 'name') nameIdx = idx;
+      if (n === 'category') catIdx = idx;
+      if (n === 'price') priceIdx = idx;
+    });
+
+    expect(nameIdx).toBe(1);
+    expect(catIdx).toBe(2);
+    expect(priceIdx).toBe(0);
+
+    // Import items via api
+    const items = sampleRows.slice(1);
+    for (const row of items) {
+      const name = String(row[nameIdx]);
+      const catName = String(row[catIdx]);
+      const pricePaise = rupeesToPaise(row[priceIdx]);
+
+      // Category auto-creation if not exists
+      let cat = mockDb.getMenuCategories().find((c) => c.name.toLowerCase() === catName.toLowerCase());
+      if (!cat) {
+        cat = mockDb.createCategory(catName);
+      }
+
+      const item = mockDb.createMenuItem({
+        name,
+        category_id: cat.id,
+        price_paise: pricePaise,
+      });
+
+      expect(item.name).toBe(name);
+      expect(item.price_paise).toBe(pricePaise);
+    }
+
+    // Verify created items exist in menu
+    const menu = mockDb.getMenuItems();
+    const crispyCorn = menu.find((m) => m.name === 'Crispy Corn');
+    expect(crispyCorn).toBeDefined();
+    expect(crispyCorn?.price_paise).toBe(18000);
+
+    const vegKolhapuri = menu.find((m) => m.name === 'Veg Kolhapuri');
+    expect(vegKolhapuri).toBeDefined();
+    expect(vegKolhapuri?.price_paise).toBe(22050);
   });
 });

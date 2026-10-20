@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import { api } from '../../lib/api';
 import { MenuItem, MenuCategory } from '../../types/database';
 import { formatPaiseToINR, rupeesToPaise, paiseToRupees } from '../../lib/currency';
-import { Plus, Edit2, Archive, RotateCcw, Trash2, Check, X, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Archive, RotateCcw, Trash2, Check, X, AlertCircle, Upload, FileSpreadsheet, Download, CheckCircle2 } from 'lucide-react';
 
 interface MenuManagementViewProps {
   menuItems: MenuItem[];
@@ -18,6 +19,7 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
   const [selectedCategoryId, setSelectedCategoryId] = useState('all');
   const [showAddDishModal, setShowAddDishModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
 
   // New Dish Form State
@@ -27,6 +29,13 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
   
   // New Category State
   const [newCategoryName, setNewCategoryName] = useState('');
+
+  // Bulk File Import State
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [parsedItems, setParsedItems] = useState<Array<{ name: string; category: string; pricePaise: number; priceRupees: number }>>([]);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [errorMessage, setErrorMessage] = useState('');
   const [noticeMessage, setNoticeMessage] = useState('');
@@ -125,11 +134,226 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
     }
   };
 
+  const resetImportState = () => {
+    setImportFile(null);
+    setParsedItems([]);
+    setImportErrors([]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleDownloadSample = () => {
+    const csvContent = 'name,category,price\nButter Chicken,Main Course,320\nPaneer Tikka,Starters,240\nGarlic Naan,Breads,60\nMango Lassi,Beverages,90\n';
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'menu_items_sample.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportFile(file);
+    setImportErrors([]);
+    setParsedItems([]);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = evt.target?.result as ArrayBuffer;
+        if (!data) throw new Error('Could not read file data.');
+        const workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        if (!firstSheetName) {
+          setImportErrors(['No sheets found in the file.']);
+          return;
+        }
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rawRows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+        if (!rawRows || rawRows.length === 0) {
+          setImportErrors(['The uploaded file is empty.']);
+          return;
+        }
+
+        // Normalize string to match headers regardless of order or formatting
+        const normalize = (str: any) =>
+          String(str || '')
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]/g, '');
+
+        let headerRowIdx = -1;
+        let nameIdx = -1;
+        let catIdx = -1;
+        let priceIdx = -1;
+
+        for (let r = 0; r < Math.min(rawRows.length, 10); r++) {
+          const row = rawRows[r];
+          if (!Array.isArray(row)) continue;
+
+          let foundName = -1;
+          let foundCat = -1;
+          let foundPrice = -1;
+
+          row.forEach((cell, idx) => {
+            const norm = normalize(cell);
+            if (!norm) return;
+            if (norm === 'name' || norm === 'dish' || norm === 'dishname' || norm === 'item' || norm === 'itemname') {
+              foundName = idx;
+            } else if (
+              norm === 'category' ||
+              norm === 'cateogory' ||
+              norm === 'cat' ||
+              norm === 'categoryname' ||
+              norm === 'itemcategory'
+            ) {
+              foundCat = idx;
+            } else if (
+              norm === 'price' ||
+              norm === 'rate' ||
+              norm === 'cost' ||
+              norm === 'amount' ||
+              norm === 'priceinr' ||
+              norm === 'pricers'
+            ) {
+              foundPrice = idx;
+            }
+          });
+
+          if (foundName !== -1 && foundCat !== -1 && foundPrice !== -1) {
+            headerRowIdx = r;
+            nameIdx = foundName;
+            catIdx = foundCat;
+            priceIdx = foundPrice;
+            break;
+          }
+        }
+
+        if (headerRowIdx === -1) {
+          setImportErrors([
+            "Could not detect all 3 required columns: 'name', 'category', and 'price'. Please ensure your file includes these column headers (column order does not matter).",
+          ]);
+          return;
+        }
+
+        const items: Array<{ name: string; category: string; pricePaise: number; priceRupees: number }> = [];
+        const errors: string[] = [];
+
+        for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
+          const row = rawRows[r];
+          if (!row || !Array.isArray(row)) continue;
+
+          const rawName = String(row[nameIdx] ?? '').trim();
+          const rawCat = String(row[catIdx] ?? '').trim();
+          const rawPrice = row[priceIdx];
+
+          // Skip empty rows
+          if (!rawName && !rawCat && (rawPrice === '' || rawPrice === undefined || rawPrice === null)) {
+            continue;
+          }
+
+          const rowNum = r + 1;
+
+          if (!rawName) {
+            errors.push(`Row ${rowNum}: Dish name is empty.`);
+            continue;
+          }
+
+          if (!rawCat) {
+            errors.push(`Row ${rowNum} ("${rawName}"): Category is empty.`);
+            continue;
+          }
+
+          const priceClean = String(rawPrice ?? '').replace(/[^0-9.]/g, '');
+          const priceNum = parseFloat(priceClean);
+
+          if (isNaN(priceNum) || priceNum <= 0) {
+            errors.push(`Row ${rowNum} ("${rawName}"): Invalid or missing price (${rawPrice}).`);
+            continue;
+          }
+
+          items.push({
+            name: rawName,
+            category: rawCat,
+            pricePaise: rupeesToPaise(priceNum),
+            priceRupees: priceNum,
+          });
+        }
+
+        if (items.length === 0 && errors.length === 0) {
+          errors.push('No data rows found below the header row.');
+        }
+
+        setParsedItems(items);
+        setImportErrors(errors);
+      } catch (err: unknown) {
+        setImportErrors([err instanceof Error ? err.message : 'Failed to parse file. Please verify CSV/Excel formatting.']);
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleExecuteImport = async () => {
+    if (parsedItems.length === 0 || isImporting) return;
+    setIsImporting(true);
+    setErrorMessage('');
+
+    try {
+      // 1. Fetch current categories
+      const currentCats = await api.getMenuCategories();
+      const catMap = new Map<string, string>(
+        currentCats.map((c) => [c.name.toLowerCase().trim(), c.id])
+      );
+
+      // 2. Auto-create any missing categories
+      const distinctCats = Array.from(new Set(parsedItems.map((item) => item.category.trim())));
+      let newCatsCreated = 0;
+      for (const catName of distinctCats) {
+        const key = catName.toLowerCase();
+        if (!catMap.has(key)) {
+          const newCat = await api.createCategory(catName);
+          catMap.set(key, newCat.id);
+          newCatsCreated++;
+        }
+      }
+
+      // 3. Create all menu items
+      let addedCount = 0;
+      for (const item of parsedItems) {
+        const catId = catMap.get(item.category.toLowerCase().trim())!;
+        await api.createMenuItem({
+          name: item.name,
+          category_id: catId,
+          price_paise: item.pricePaise,
+          is_available: true,
+        });
+        addedCount++;
+      }
+
+      // 4. Success feedback and refresh
+      setShowImportModal(false);
+      resetImportState();
+      setNoticeMessage(
+        `Successfully imported ${addedCount} dishes${newCatsCreated > 0 ? ` and created ${newCatsCreated} new categories` : ''} into the menu!`
+      );
+      onMenuUpdated();
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
         <div>
           <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Menu & Category Management</h2>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
@@ -137,7 +361,11 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button type="button" className="btn-secondary" onClick={() => setShowImportModal(true)}>
+            <Upload size={14} />
+            Add via File (CSV / Excel)
+          </button>
           <button type="button" className="btn-secondary" onClick={() => setShowAddCategoryModal(true)}>
             <Plus size={14} />
             Add Category
@@ -444,6 +672,214 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Add Menu Items via File (CSV / Excel) */}
+      {showImportModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '640px', width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileSpreadsheet size={18} color="var(--emerald-green)" />
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px' }}>Import Menu Items via File</h3>
+                  <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                    Upload CSV or Excel (.xlsx, .xls) with 3 columns: name, category, and price
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn-secondary btn-sm"
+                onClick={() => {
+                  setShowImportModal(false);
+                  resetImportState();
+                }}
+                style={{ border: 'none' }}
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            <div className="modal-body" style={{ overflowY: 'auto', flex: 1, padding: '16px 20px' }}>
+              {/* Instructions & Sample Download */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--bg-surface-elevated)',
+                  border: '1px solid var(--border-subtle)',
+                  marginBottom: '14px',
+                  flexWrap: 'wrap',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <strong>Required Columns:</strong> <code style={{ backgroundColor: 'var(--bg-surface)', padding: '2px 5px', borderRadius: '4px' }}>name</code>,{' '}
+                  <code style={{ backgroundColor: 'var(--bg-surface)', padding: '2px 5px', borderRadius: '4px' }}>category</code>,{' '}
+                  <code style={{ backgroundColor: 'var(--bg-surface)', padding: '2px 5px', borderRadius: '4px' }}>price</code> (order doesn't matter)
+                </div>
+                <button
+                  type="button"
+                  className="btn-secondary btn-sm"
+                  onClick={handleDownloadSample}
+                  style={{ fontSize: '11.5px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                >
+                  <Download size={13} />
+                  <span>Download Sample CSV</span>
+                </button>
+              </div>
+
+              {/* Upload Drop Area */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  border: '2px dashed var(--border-strong)',
+                  borderRadius: '10px',
+                  padding: '24px 16px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  backgroundColor: importFile ? 'rgba(4, 106, 56, 0.04)' : 'var(--bg-surface)',
+                  borderColor: importFile ? 'var(--emerald-green)' : 'var(--border-strong)',
+                  transition: 'all 0.2s ease',
+                  marginBottom: '16px',
+                }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv, .xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                  style={{ display: 'none' }}
+                  onChange={handleFileChange}
+                />
+                <Upload size={28} style={{ margin: '0 auto 8px', color: importFile ? 'var(--emerald-green)' : 'var(--text-muted)' }} />
+                {importFile ? (
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--emerald-green)' }}>
+                      {importFile.name}
+                    </div>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      {(importFile.size / 1024).toFixed(1)} KB &bull; Click to choose another file
+                    </span>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>
+                      Click to choose CSV or Excel file
+                    </div>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      Supports .csv, .xlsx, .xls with name, category, price columns
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Error messages if any */}
+              {importErrors.length > 0 && (
+                <div className="alert-banner alert-banner-danger" style={{ marginBottom: '14px', display: 'block' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', fontWeight: 700 }}>
+                    <AlertCircle size={15} />
+                    <span>File Issues Detected</span>
+                  </div>
+                  <ul style={{ margin: '4px 0 0 18px', padding: 0, fontSize: '11.5px', lineHeight: 1.5 }}>
+                    {importErrors.map((err, idx) => (
+                      <li key={idx}>{err}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Parsed Items Preview */}
+              {parsedItems.length > 0 && (
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '8px',
+                      flexWrap: 'wrap',
+                      gap: '6px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <CheckCircle2 size={16} color="var(--emerald-green)" />
+                      <span style={{ fontWeight: 700, fontSize: '13px' }}>
+                        Ready to Import ({parsedItems.length} dishes)
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                      Categories: {Array.from(new Set(parsedItems.map((i) => i.category))).join(', ')}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      maxHeight: '220px',
+                      overflowY: 'auto',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '8px',
+                      backgroundColor: 'var(--bg-surface)',
+                    }}
+                  >
+                    <table style={{ margin: 0, fontSize: '12px' }}>
+                      <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-surface-elevated)' }}>
+                        <tr>
+                          <th style={{ width: '40px', textAlign: 'center' }}>#</th>
+                          <th>Dish Name</th>
+                          <th>Category</th>
+                          <th style={{ textAlign: 'right' }}>Price</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {parsedItems.map((item, idx) => (
+                          <tr key={idx}>
+                            <td style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px' }}>{idx + 1}</td>
+                            <td style={{ fontWeight: 600 }}>{item.name}</td>
+                            <td>
+                              <span className="badge badge-settled" style={{ fontSize: '10px' }}>
+                                {item.category}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>
+                              {formatPaiseToINR(item.pricePaise)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ borderTop: '1px solid var(--border-subtle)', padding: '12px 20px' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setShowImportModal(false);
+                  resetImportState();
+                }}
+                disabled={isImporting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleExecuteImport}
+                disabled={parsedItems.length === 0 || isImporting}
+                style={{ minWidth: '160px' }}
+              >
+                {isImporting ? 'Importing Dishes...' : `Import ${parsedItems.length} Dishes`}
+              </button>
+            </div>
           </div>
         </div>
       )}

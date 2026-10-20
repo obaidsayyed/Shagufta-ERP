@@ -488,6 +488,7 @@ export const api = {
   async submitOrder(params: {
     order_type: 'dine_in' | 'parcel';
     table_id?: string;
+    customer_number?: number;
     parcel_customer_notes?: string;
     items: Array<{ menu_item_id: string; quantity: number }>;
     idempotency_key?: string;
@@ -540,9 +541,12 @@ export const api = {
     const tableMap = new Map(tables.map((t) => [t.id, t.table_number]));
     const parcelMap = new Map(parcels.map((p) => [p.id, p.parcel_code]));
 
-    // Find table_id from table_sessions
+    // Find table_id from table_sessions with (2) suffix for 2nd customer
     const sessions = mockDb.getTableSessions();
-    const sessionTableMap = new Map(sessions.map((s) => [s.id, tableMap.get(s.table_id) || 'Table']));
+    const sessionTableMap = new Map(sessions.map((s) => {
+      const base = tableMap.get(s.table_id) || 'Table';
+      return [s.id, s.customer_number === 2 ? `${base} (2)` : base];
+    }));
 
     const groupsMap = new Map<string, KitchenPreparationGroup>();
 

@@ -20,7 +20,8 @@ import {
   Clock, 
   AlertCircle,
   ShoppingBag,
-  ArrowLeft
+  ArrowLeft,
+  Users
 } from 'lucide-react';
 
 export const WaiterView: React.FC = () => {
@@ -33,13 +34,20 @@ export const WaiterView: React.FC = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
   const [selectedTableId, setSelectedTableId] = useState<string>('');
+  const [selectedCustomerNumber, setSelectedCustomerNumber] = useState<1 | 2>(1);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Cart state: map of menuItemId -> quantity
-  const [cart, setCart] = useState<Record<string, number>>({});
+  // Cart state per customer slot: map of menuItemId -> quantity
+  const [cart1, setCart1] = useState<Record<string, number>>({});
+  const [cart2, setCart2] = useState<Record<string, number>>({});
+  const cart = selectedCustomerNumber === 1 ? cart1 : cart2;
+  const setCart = (updater: React.SetStateAction<Record<string, number>>) => {
+    if (selectedCustomerNumber === 1) setCart1(updater);
+    else setCart2(updater);
+  };
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccessTicket, setSubmitSuccessTicket] = useState<{ ticket_number: string; itemsCount: number } | null>(null);
+  const [submitSuccessTicket, setSubmitSuccessTicket] = useState<{ ticket_number: string; itemsCount: number; tableDisplay: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
 
   const loadData = async () => {
@@ -72,7 +80,15 @@ export const WaiterView: React.FC = () => {
   }, []);
 
   const selectedTable = tables.find((t) => t.id === selectedTableId);
-  const activeSession = tableSessions.find((s) => s.table_id === selectedTableId && s.session_status === 'open');
+  const openSessionsForTable = tableSessions.filter(
+    (s) => s.table_id === selectedTableId && s.session_status === 'open'
+  );
+  const customer1Session = openSessionsForTable.find((s) => (s.customer_number || 1) === 1);
+  const customer2Session = openSessionsForTable.find((s) => s.customer_number === 2);
+  const currentSession = selectedCustomerNumber === 1 ? customer1Session : customer2Session;
+  const currentDisplayTable = selectedCustomerNumber === 2
+    ? `${selectedTable?.table_number || 'Table'} (2)`
+    : selectedTable?.table_number || 'Table';
 
   // Filtered dishes
   const filteredDishes = menuItems.filter((item) => {
@@ -131,11 +147,12 @@ export const WaiterView: React.FC = () => {
       }));
 
       // Generate idempotency key for this atomic submission
-      const idempotency_key = `wtr_${selectedTableId}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const idempotency_key = `wtr_${selectedTableId}_c${selectedCustomerNumber}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
       const result = await api.submitOrder({
         order_type: 'dine_in',
         table_id: selectedTableId,
+        customer_number: selectedCustomerNumber,
         items: itemsPayload,
         idempotency_key,
         caller_staff: currentStaff,
@@ -144,6 +161,7 @@ export const WaiterView: React.FC = () => {
       setSubmitSuccessTicket({
         ticket_number: result.ticket_number,
         itemsCount: totalCartQty,
+        tableDisplay: currentDisplayTable,
       });
       clearCart();
       await loadData();
@@ -155,13 +173,13 @@ export const WaiterView: React.FC = () => {
     }
   };
 
-  // Orders for the currently selected table's active session
-  const tableSessionOrders = activeSession
-    ? orders.filter((o) => o.table_session_id === activeSession.id)
+  // Orders for the currently selected customer's active session
+  const tableSessionOrders = currentSession
+    ? orders.filter((o) => o.table_session_id === currentSession.id)
     : [];
 
-  const tableSessionOrderItems = activeSession
-    ? orderItems.filter((oi) => oi.table_session_id === activeSession.id)
+  const tableSessionOrderItems = currentSession
+    ? orderItems.filter((oi) => oi.table_session_id === currentSession.id)
     : [];
 
   return (
@@ -193,7 +211,10 @@ export const WaiterView: React.FC = () => {
             ) : (
               <div className="table-square-grid">
                 {tables.map((tbl) => {
-                  const hasSession = tableSessions.some((s) => s.table_id === tbl.id && s.session_status === 'open');
+                  const openSessions = tableSessions.filter((s) => s.table_id === tbl.id && s.session_status === 'open');
+                  const count = openSessions.length;
+                  const isFull = count >= 2;
+                  const isOccupied = count > 0;
                   return (
                     <button
                       key={tbl.id}
@@ -201,33 +222,56 @@ export const WaiterView: React.FC = () => {
                       className="table-square-btn"
                       onClick={() => {
                         setSelectedTableId(tbl.id);
+                        setSelectedCustomerNumber(1);
                         setSubmitSuccessTicket(null);
                         setErrorMessage('');
                       }}
                       style={{
-                        backgroundColor: hasSession ? 'var(--warning-bg)' : 'var(--bg-surface-elevated)',
-                        borderColor: hasSession ? 'var(--warning-border)' : 'var(--border-strong)',
-                        borderWidth: hasSession ? '2px' : '1px',
+                        backgroundColor: isFull
+                          ? 'rgba(227, 66, 34, 0.08)'
+                          : isOccupied
+                          ? 'var(--warning-bg)'
+                          : 'var(--bg-surface-elevated)',
+                        borderColor: isFull
+                          ? 'var(--vermilion)'
+                          : isOccupied
+                          ? 'var(--warning-border)'
+                          : 'var(--border-strong)',
+                        borderWidth: isOccupied ? '2px' : '1px',
                         borderStyle: 'solid',
-                        boxShadow: hasSession ? '0 0 10px rgba(245, 158, 11, 0.15)' : 'none',
+                        boxShadow: isOccupied ? '0 0 10px rgba(245, 158, 11, 0.15)' : 'none',
+                        position: 'relative',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '2px',
                       }}
                     >
-                      {hasSession && (
+                      {isOccupied && (
                         <span
                           style={{
                             position: 'absolute',
-                            top: '6px',
-                            right: '6px',
-                            width: '7px',
-                            height: '7px',
-                            borderRadius: '50%',
-                            backgroundColor: 'var(--warning)',
+                            top: '5px',
+                            right: '5px',
+                            fontSize: '9px',
+                            fontWeight: 700,
+                            padding: '1px 5px',
+                            borderRadius: '4px',
+                            backgroundColor: isFull ? 'var(--vermilion)' : 'var(--warning)',
+                            color: '#ffffff',
+                            lineHeight: 1.2,
                           }}
-                          title="Active dining session"
-                        />
+                          title={isFull ? 'Table full (2/2 customers)' : '1 customer seated (1/2)'}
+                        >
+                          {count}/2
+                        </span>
                       )}
-                      <span style={{ fontWeight: 800, color: hasSession ? 'var(--warning)' : 'var(--text-primary)' }}>
+                      <span style={{ fontWeight: 800, fontSize: '15px', color: isFull ? 'var(--vermilion)' : isOccupied ? 'var(--warning)' : 'var(--text-primary)' }}>
                         {tbl.table_number}
+                      </span>
+                      <span style={{ fontSize: '10px', color: isFull ? 'var(--vermilion)' : isOccupied ? 'var(--warning)' : 'var(--text-muted)' }}>
+                        {isFull ? '2 Customers (FULL)' : isOccupied ? '1 Customer' : 'Vacant'}
                       </span>
                     </button>
                   );
@@ -268,17 +312,117 @@ export const WaiterView: React.FC = () => {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>
-                Table: {selectedTable?.table_number}
+                Table: {currentDisplayTable}
               </span>
-              {activeSession ? (
+              {currentSession ? (
                 <span className="badge badge-pending">
-                  OPEN SESSION
+                  ACTIVE BILL
                 </span>
               ) : (
                 <span className="badge badge-settled">
-                  VACANT
+                  VACANT SLOT
                 </span>
               )}
+            </div>
+          </div>
+
+          {/* Customer Allocation Selector Bar (Max 2 Customers per table) */}
+          <div
+            className="panel"
+            style={{
+              marginBottom: '12px',
+              padding: '10px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '10px',
+              backgroundColor: 'var(--bg-surface-elevated)',
+              borderColor: 'var(--border-subtle)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Users size={16} color="var(--primary-action)" />
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)' }}>
+                  Customer Allocation (Max 2)
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  Allocate up to 2 separate customers per table with individual bills
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {/* Customer 1 Slot */}
+              <button
+                type="button"
+                onClick={() => setSelectedCustomerNumber(1)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  border: selectedCustomerNumber === 1
+                    ? '2px solid var(--emerald-green)'
+                    : '1px solid var(--border-strong)',
+                  backgroundColor: selectedCustomerNumber === 1
+                    ? 'rgba(4, 106, 56, 0.12)'
+                    : 'var(--bg-surface)',
+                  color: selectedCustomerNumber === 1 ? 'var(--emerald-green)' : 'var(--text-primary)',
+                }}
+              >
+                <span>Customer 1 ({selectedTable?.table_number})</span>
+                {customer1Session ? (
+                  <span className="badge badge-pending" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                    Active
+                  </span>
+                ) : (
+                  <span className="badge badge-settled" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                    Vacant
+                  </span>
+                )}
+              </button>
+
+              {/* Customer 2 Slot: displays as (2) */}
+              <button
+                type="button"
+                onClick={() => setSelectedCustomerNumber(2)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  border: selectedCustomerNumber === 2
+                    ? '2px solid var(--vermilion)'
+                    : '1px solid var(--border-strong)',
+                  backgroundColor: selectedCustomerNumber === 2
+                    ? 'rgba(227, 66, 34, 0.12)'
+                    : 'var(--bg-surface)',
+                  color: selectedCustomerNumber === 2 ? 'var(--vermilion)' : 'var(--text-primary)',
+                }}
+              >
+                <span>Customer 2 ({selectedTable?.table_number} (2))</span>
+                {customer2Session ? (
+                  <span className="badge badge-pending" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                    Active
+                  </span>
+                ) : (
+                  <span className="badge badge-settled" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                    Vacant
+                  </span>
+                )}
+              </button>
             </div>
           </div>
 
@@ -305,7 +449,7 @@ export const WaiterView: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <CheckCircle size={18} color="var(--success)" />
                 <div>
-                  <strong>Order Accepted!</strong> Kitchen ticket <strong>{submitSuccessTicket.ticket_number}</strong> sent for preparation.
+                  <strong>Order Accepted!</strong> Kitchen ticket <strong>{submitSuccessTicket.ticket_number}</strong> sent for <strong>{submitSuccessTicket.tableDisplay}</strong>.
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
@@ -475,7 +619,7 @@ export const WaiterView: React.FC = () => {
                 <div className="panel-header">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <ShoppingBag size={16} color="var(--primary-action)" />
-                    <h3 style={{ color: 'var(--text-primary)' }}>Order For {selectedTable?.table_number || 'Table'}</h3>
+                    <h3 style={{ color: 'var(--text-primary)' }}>Order For {currentDisplayTable}</h3>
                   </div>
                   {totalCartQty > 0 && (
                     <button type="button" className="btn-secondary btn-sm" onClick={clearCart} style={{ border: 'none', color: 'var(--text-muted)' }}>
@@ -566,13 +710,13 @@ export const WaiterView: React.FC = () => {
                       disabled={isSubmitting || totalCartQty === 0}
                     >
                       <Send size={15} />
-                      <span>{isSubmitting ? 'Sending to Kitchen (KOT)...' : `Send to Kitchen (KOT) (${totalCartQty} items)`}</span>
+                      <span>{isSubmitting ? 'Sending to Kitchen (KOT)...' : `Send to Kitchen (${currentDisplayTable}) (${totalCartQty} items)`}</span>
                     </button>
                   </div>
                 )}
 
-                {/* Preparation Status of Current Table's Active Session */}
-                {activeSession && tableSessionOrderItems.length > 0 && (
+                {/* Preparation Status of Current Customer's Active Session */}
+                {currentSession && tableSessionOrderItems.length > 0 && (
                   <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: '1px solid var(--border-subtle)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>

@@ -321,12 +321,13 @@ class MockDatabase {
   public rpcSubmitOrder(params: {
     order_type: 'dine_in' | 'parcel';
     table_id?: string;
+    customer_number?: number;
     parcel_customer_notes?: string;
     items: Array<{ menu_item_id: string; quantity: number }>;
     idempotency_key?: string;
     caller_staff: StaffProfile;
   }): { status: string; order_id: string; ticket_number: string; table_session_id?: string; parcel_id?: string; parcel_code?: string; bill_id: string } {
-    const { order_type, table_id, parcel_customer_notes, items, idempotency_key, caller_staff } = params;
+    const { order_type, table_id, customer_number, parcel_customer_notes, items, idempotency_key, caller_staff } = params;
 
     if (!caller_staff || !caller_staff.is_active) {
       throw new Error('Unauthorized: Active staff profile required');
@@ -385,8 +386,21 @@ class MockDatabase {
         targetTable = newTable;
       }
 
-      // Check open session
-      const existingSession = this.tableSessions.find((s) => (s.table_id === table_id || s.table_id === targetTable!.id) && s.session_status === 'open');
+      // Enforce max 2 customers per table
+      if (customer_number !== undefined && (customer_number < 1 || customer_number > 2)) {
+        throw new Error('Table capacity reached: A table cannot accommodate more than 2 customers.');
+      }
+      const custNum = customer_number === 2 ? 2 : 1;
+      const displayTableNumber = custNum === 2 ? `${targetTable.table_number} (2)` : targetTable.table_number;
+
+      // Find all active open sessions for this table
+      const openSessionsForTable = this.tableSessions.filter(
+        (s) => (s.table_id === table_id || s.table_id === targetTable!.id) && s.session_status === 'open'
+      );
+
+      // Check if session for this specific customer slot already exists
+      const existingSession = openSessionsForTable.find((s) => (s.customer_number || 1) === custNum);
+
       if (existingSession) {
         session_id = existingSession.id;
         const bill = this.bills.find((b) => b.table_session_id === session_id);
@@ -396,7 +410,7 @@ class MockDatabase {
           bill_id = `bill-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
           this.bills.push({
             id: bill_id,
-            bill_number: `BILL-${targetTable.table_number}-${Date.now().toString().slice(-4)}`,
+            bill_number: `BILL-${displayTableNumber}-${Date.now().toString().slice(-4)}`,
             table_session_id: session_id,
             subtotal_paise: 0,
             adjustments_paise: 0,
@@ -406,11 +420,17 @@ class MockDatabase {
           });
         }
       } else {
-        // Create new session
+        // Enforce max 2 customers per table
+        if (openSessionsForTable.length >= 2) {
+          throw new Error('Table capacity reached: A table cannot accommodate more than 2 customers.');
+        }
+
+        // Create new session for this customer
         session_id = `sess-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         this.tableSessions.push({
           id: session_id,
           table_id: targetTable.id,
+          customer_number: custNum,
           session_status: 'open',
           opened_at: now,
           created_by_staff_id: caller_staff.staff_id,
@@ -420,7 +440,7 @@ class MockDatabase {
         bill_id = `bill-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         this.bills.push({
           id: bill_id,
-          bill_number: `BILL-${targetTable.table_number}-${Date.now().toString().slice(-4)}`,
+          bill_number: `BILL-${displayTableNumber}-${Date.now().toString().slice(-4)}`,
           table_session_id: session_id,
           subtotal_paise: 0,
           adjustments_paise: 0,

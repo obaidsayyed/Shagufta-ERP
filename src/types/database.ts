@@ -44,6 +44,7 @@ export type SessionStatus = 'open' | 'settled';
 export interface TableSession {
   id: string;
   table_id: string;
+  customer_number?: number; // 1 or 2 (defaults to 1). If 2, displayed with (2) after table number
   session_status: SessionStatus;
   opened_at: string;
   settled_at?: string | null;
