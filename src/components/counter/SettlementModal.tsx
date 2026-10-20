@@ -230,7 +230,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                     fontSize: '16px',
                     fontWeight: 600,
                     height: '42px',
-                    backgroundColor: '#0F172A',
+                    backgroundColor: 'var(--bg-surface)',
                     color: 'var(--text-primary)',
                     border: isInsufficient
                       ? '1px solid var(--danger-border)'
@@ -285,8 +285,8 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                     style={{
                       marginTop: '12px',
                       padding: '12px 14px',
-                      backgroundColor: 'rgba(22, 163, 74, 0.15)',
-                      border: '1px solid var(--success-border)',
+                      backgroundColor: 'rgba(4, 106, 56, 0.12)',
+                      border: '1px solid var(--emerald-green)',
                       borderRadius: '6px',
                       display: 'flex',
                       alignItems: 'center',
@@ -298,7 +298,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                         style={{
                           fontSize: '11px',
                           fontWeight: 700,
-                          color: '#4ADE80',
+                          color: 'var(--emerald-green)',
                           textTransform: 'uppercase',
                           letterSpacing: '0.04em',
                           display: 'block',
@@ -306,7 +306,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                       >
                         Exact Change to Return
                       </span>
-                      <div style={{ fontSize: '24px', fontWeight: 800, color: '#4ADE80', lineHeight: 1.2, marginTop: '2px' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--emerald-green)', lineHeight: 1.2, marginTop: '2px' }}>
                         {formatPaiseToINR(changePaise)}
                       </div>
                     </div>
@@ -320,8 +320,8 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                     style={{
                       marginTop: '12px',
                       padding: '10px 14px',
-                      backgroundColor: 'rgba(2, 132, 199, 0.15)',
-                      border: '1px solid var(--info-border)',
+                      backgroundColor: 'rgba(4, 106, 56, 0.08)',
+                      border: '1px solid var(--emerald-green)',
                       borderRadius: '6px',
                       display: 'flex',
                       alignItems: 'center',
@@ -329,31 +329,31 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                     }}
                   >
                     <div>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#38BDF8', textTransform: 'uppercase' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--emerald-green)', textTransform: 'uppercase' }}>
                         Exact Cash Tendered
                       </span>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#38BDF8', marginTop: '2px' }}>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--emerald-green)', marginTop: '2px' }}>
                         No Change Due (₹0.00)
                       </div>
                     </div>
-                    <CheckCircle2 size={22} color="#38BDF8" />
+                    <CheckCircle2 size={22} color="var(--emerald-green)" />
                   </div>
                 ) : (
                   <div
                     style={{
                       marginTop: '12px',
                       padding: '10px 14px',
-                      backgroundColor: 'rgba(185, 28, 28, 0.15)',
-                      border: '1px solid var(--danger-border)',
+                      backgroundColor: 'rgba(227, 66, 34, 0.12)',
+                      border: '1px solid var(--vermilion)',
                       borderRadius: '6px',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
-                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#F87171', textTransform: 'uppercase' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--vermilion)', textTransform: 'uppercase' }}>
                           Insufficient Amount Tendered
                         </span>
-                        <div style={{ fontSize: '18px', fontWeight: 800, color: '#F87171', marginTop: '2px' }}>
+                        <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--vermilion)', marginTop: '2px' }}>
                           Short by {formatPaiseToINR(Math.abs(changePaise))}
                         </div>
                       </div>
@@ -361,7 +361,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                         Given: {formatPaiseToINR(cashReceivedPaise)}
                       </span>
                     </div>
-                    <div style={{ fontSize: '11px', color: '#FCA5A5', marginTop: '4px' }}>
+                    <div style={{ fontSize: '11px', color: '#C73517', marginTop: '4px' }}>
                       Customer still needs to pay {formatPaiseToINR(Math.abs(changePaise))} more to settle this bill.
                     </div>
                   </div>
