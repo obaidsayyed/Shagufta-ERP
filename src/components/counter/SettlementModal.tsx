@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import { Bill, PaymentMethod } from '../../types/database';
-import { formatPaiseToINR } from '../../lib/currency';
-import { CheckCircle2, Banknote, Smartphone, X, AlertCircle } from 'lucide-react';
+import { formatPaiseToINR, paiseToRupees } from '../../lib/currency';
+import { CheckCircle2, Banknote, Smartphone, X, AlertCircle, ArrowRightLeft } from 'lucide-react';
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -22,10 +22,28 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
 }) => {
   const { currentStaff } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [cashReceived, setCashReceived] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Reset cash tendered whenever bill changes or payment method is switched
+  useEffect(() => {
+    setCashReceived('');
+  }, [bill?.id, paymentMethod]);
+
   if (!isOpen || !bill) return null;
+
+  const parsedCashRupees = parseFloat(cashReceived);
+  const isCashEntered = !isNaN(parsedCashRupees) && cashReceived.trim() !== '' && parsedCashRupees >= 0;
+  const cashReceivedPaise = isCashEntered ? Math.round(parsedCashRupees * 100) : 0;
+  const changePaise = isCashEntered ? cashReceivedPaise - bill.final_total_paise : 0;
+  const isInsufficient = isCashEntered && changePaise < 0;
+
+  // Preset denominations higher than total bill
+  const billRupees = Math.ceil(bill.final_total_paise / 100);
+  const quickNotes = [50, 100, 200, 500, 1000, 2000]
+    .filter((note) => note > billRupees)
+    .slice(0, 3);
 
   const handleSettle = async () => {
     if (!currentStaff) return;
@@ -53,7 +71,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '420px' }}>
+      <div className="modal-content" style={{ maxWidth: '440px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CheckCircle2 size={18} color="var(--success)" />
@@ -130,6 +148,242 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
             </button>
           </div>
 
+          {/* Cash Tendered & Change Return Box (When Cash is selected) */}
+          {paymentMethod === 'cash' && (
+            <div
+              style={{
+                backgroundColor: 'var(--bg-surface-elevated)',
+                border: '1px solid var(--border-strong)',
+                borderRadius: '8px',
+                padding: '14px',
+                marginBottom: '16px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <label
+                  htmlFor="cash-tendered-input"
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    margin: 0,
+                  }}
+                >
+                  <Banknote size={15} color="var(--secondary-accent)" />
+                  Cash Received from Customer
+                </label>
+                {cashReceived && (
+                  <button
+                    type="button"
+                    onClick={() => setCashReceived('')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      fontSize: '11px',
+                      padding: '2px 4px',
+                      minHeight: 'auto',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              {/* Input Box with Rupee Symbol */}
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <span
+                  style={{
+                    position: 'absolute',
+                    left: '12px',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: 'var(--text-muted)',
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                  }}
+                >
+                  ₹
+                </span>
+                <input
+                  id="cash-tendered-input"
+                  type="number"
+                  step="any"
+                  min="0"
+                  placeholder={`e.g. ${paiseToRupees(bill.final_total_paise)}`}
+                  value={cashReceived}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || parseFloat(val) >= 0) {
+                      setCashReceived(val);
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    paddingLeft: '28px',
+                    paddingRight: '12px',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    height: '42px',
+                    backgroundColor: '#0F172A',
+                    color: 'var(--text-primary)',
+                    border: isInsufficient
+                      ? '1px solid var(--danger-border)'
+                      : isCashEntered && changePaise >= 0
+                      ? '1px solid var(--success-border)'
+                      : '1px solid var(--border-strong)',
+                    borderRadius: '6px',
+                  }}
+                  autoFocus
+                />
+              </div>
+
+              {/* Quick Presets (Exact + round notes) */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{
+                    padding: '4px 10px',
+                    minHeight: '28px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    borderRadius: '4px',
+                  }}
+                  onClick={() => setCashReceived(paiseToRupees(bill.final_total_paise).toString())}
+                >
+                  Exact: {formatPaiseToINR(bill.final_total_paise, false)}
+                </button>
+                {quickNotes.map((note) => (
+                  <button
+                    key={note}
+                    type="button"
+                    className="btn-secondary"
+                    style={{
+                      padding: '4px 10px',
+                      minHeight: '28px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      borderRadius: '4px',
+                    }}
+                    onClick={() => setCashReceived(note.toString())}
+                  >
+                    ₹{note}
+                  </button>
+                ))}
+              </div>
+
+              {/* Change Calculation Display */}
+              {isCashEntered ? (
+                changePaise > 0 ? (
+                  <div
+                    style={{
+                      marginTop: '12px',
+                      padding: '12px 14px',
+                      backgroundColor: 'rgba(22, 163, 74, 0.15)',
+                      border: '1px solid var(--success-border)',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          color: '#4ADE80',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                          display: 'block',
+                        }}
+                      >
+                        Exact Change to Return
+                      </span>
+                      <div style={{ fontSize: '24px', fontWeight: 800, color: '#4ADE80', lineHeight: 1.2, marginTop: '2px' }}>
+                        {formatPaiseToINR(changePaise)}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                      <div>Given: <strong style={{ color: 'var(--text-primary)' }}>{formatPaiseToINR(cashReceivedPaise)}</strong></div>
+                      <div>Due: <span style={{ color: 'var(--text-muted)' }}>{formatPaiseToINR(bill.final_total_paise)}</span></div>
+                    </div>
+                  </div>
+                ) : changePaise === 0 ? (
+                  <div
+                    style={{
+                      marginTop: '12px',
+                      padding: '10px 14px',
+                      backgroundColor: 'rgba(2, 132, 199, 0.15)',
+                      border: '1px solid var(--info-border)',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#38BDF8', textTransform: 'uppercase' }}>
+                        Exact Cash Tendered
+                      </span>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#38BDF8', marginTop: '2px' }}>
+                        No Change Due (₹0.00)
+                      </div>
+                    </div>
+                    <CheckCircle2 size={22} color="#38BDF8" />
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      marginTop: '12px',
+                      padding: '10px 14px',
+                      backgroundColor: 'rgba(185, 28, 28, 0.15)',
+                      border: '1px solid var(--danger-border)',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#F87171', textTransform: 'uppercase' }}>
+                          Insufficient Amount Tendered
+                        </span>
+                        <div style={{ fontSize: '18px', fontWeight: 800, color: '#F87171', marginTop: '2px' }}>
+                          Short by {formatPaiseToINR(Math.abs(changePaise))}
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Given: {formatPaiseToINR(cashReceivedPaise)}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#FCA5A5', marginTop: '4px' }}>
+                      Customer still needs to pay {formatPaiseToINR(Math.abs(changePaise))} more to settle this bill.
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div
+                  style={{
+                    marginTop: '10px',
+                    fontSize: '11px',
+                    color: 'var(--text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <ArrowRightLeft size={13} />
+                  <span>Enter amount given above to compute the exact change to return</span>
+                </div>
+              )}
+            </div>
+          )}
+
           <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
             Notice: Confirming settlement marks this session closed and records collection under <strong>{paymentMethod.toUpperCase()}</strong>. Future orders for this table will begin a fresh session.
           </p>
@@ -144,7 +398,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
             className="btn-primary"
             style={{ backgroundColor: 'var(--primary-action)', borderColor: 'var(--primary-action)', color: '#FFFFFF', fontWeight: 700 }}
             onClick={handleSettle}
-            disabled={isSubmitting}
+            disabled={isSubmitting || (paymentMethod === 'cash' && isInsufficient)}
           >
             {isSubmitting ? 'Recording Settlement...' : `Settle Payment (${paymentMethod.toUpperCase()})`}
           </button>

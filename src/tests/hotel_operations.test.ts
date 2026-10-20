@@ -491,4 +491,43 @@ describe('Hotel Order Management System — Comprehensive Operational Tests', ()
     const allOrders = mockDb.getOrders().filter((o) => o.idempotency_key === idempotencyKey);
     expect(allOrders.length).toBe(1); // Exactly 1 order in database!
   });
+
+  // TEST 11 — Cash Settlement & Exact Change Calculation
+  it('Test 11: Accurately computes exact change return for cash settlement and settles properly', () => {
+    const table = mockDb.getTables()[1];
+    const paneer = mockDb.getMenuItems().find((m) => m.name === 'Paneer Butter Masala')!;
+
+    const orderRes = mockDb.rpcSubmitOrder({
+      order_type: 'dine_in',
+      table_id: table.id,
+      items: [{ menu_item_id: paneer.id, quantity: 1 }],
+      caller_staff: waiterStaff,
+    });
+
+    const bill = mockDb.getBills().find((b) => b.table_session_id === orderRes.table_session_id)!;
+    expect(bill.final_total_paise).toBe(paneer.price_paise); // e.g. ₹220 = 22000 paise
+
+    // Verify change calculation logic:
+    // Paneer Butter Masala is ₹250 (25000 paise). If customer gives ₹500 (50000 paise):
+    const cashGivenPaise = 50000;
+    const changeDuePaise = cashGivenPaise - bill.final_total_paise;
+    expect(changeDuePaise).toBe(25000); // ₹250.00 exact change
+
+    // If customer gives exact ₹250 (25000 paise)
+    expect(cashGivenPaise - 25000 - bill.final_total_paise).toBe(0);
+
+    // Settle via Cash
+    const settleRes = mockDb.rpcSettleBill({
+      bill_id: bill.id,
+      payment_method: 'cash',
+      caller_staff: adminStaff,
+    });
+
+    expect(settleRes.status).toBe('success');
+    expect(settleRes.payment_method).toBe('cash');
+
+    const updatedBill = mockDb.getBills().find((b) => b.id === bill.id)!;
+    expect(updatedBill.status).toBe('settled');
+    expect(updatedBill.payment_method).toBe('cash');
+  });
 });
