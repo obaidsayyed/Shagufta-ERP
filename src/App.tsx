@@ -13,6 +13,9 @@ const MainApp: React.FC = () => {
   const { currentStaff, role, isAuthenticated } = useAuth();
   const [counterTab, setCounterTab] = useState<'sessions' | 'history' | 'analytics' | 'menu' | 'tables' | 'staff'>('sessions');
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      return false;
+    }
     const saved = localStorage.getItem('hotel_erp_sidebar_open');
     return saved !== null ? saved === 'true' : true;
   });

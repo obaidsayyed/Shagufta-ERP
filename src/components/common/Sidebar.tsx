@@ -11,7 +11,8 @@ import {
   LogOut, 
   ChefHat, 
   Smartphone,
-  Shield
+  Shield,
+  X
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -24,33 +25,40 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
+  setIsOpen,
   counterTab,
   setCounterTab,
   onOpenProfile,
 }) => {
   const { currentStaff, role, logout } = useAuth();
 
+  const isMobile = () => typeof window !== 'undefined' && window.innerWidth <= 768;
+
+  const handleSelectTab = (tab: 'sessions' | 'history' | 'analytics' | 'menu' | 'tables' | 'staff') => {
+    setCounterTab(tab);
+    if (isMobile()) {
+      setIsOpen(false);
+    }
+  };
+
+  const handleProfileClick = () => {
+    onOpenProfile();
+    if (isMobile()) {
+      setIsOpen(false);
+    }
+  };
+
+  const handleLogoutClick = () => {
+    if (isMobile()) {
+      setIsOpen(false);
+    }
+    logout();
+  };
+
   return (
-    <aside
-      style={{
-        width: isOpen ? '240px' : '0px',
-        minWidth: isOpen ? '240px' : '0px',
-        maxWidth: isOpen ? '240px' : '0px',
-        height: '100vh',
-        backgroundColor: 'var(--bg-surface)',
-        borderRight: isOpen ? '1px solid var(--border-subtle)' : 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'width 0.15s ease, min-width 0.15s ease, max-width 0.15s ease',
-        overflow: 'hidden',
-        zIndex: 998,
-        position: 'sticky',
-        top: 0,
-        flexShrink: 0,
-      }}
-    >
+    <aside className={`app-sidebar ${!isOpen ? 'closed' : ''}`}>
       {isOpen && (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '240px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
           {/* Sidebar Header */}
           <div
             style={{
@@ -58,6 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               padding: '0 16px',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'space-between',
               borderBottom: '1px solid var(--border-subtle)',
             }}
           >
@@ -67,6 +76,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 HOTEL ERP
               </span>
             </div>
+
+            {/* Close button visible when sidebar is open in mobile view */}
+            <button
+              type="button"
+              className="btn-secondary btn-sm mobile-sidebar-close-btn"
+              onClick={() => setIsOpen(false)}
+              title="Close Navigation"
+              style={{ padding: '4px 8px' }}
+            >
+              <X size={16} />
+              <span>Close</span>
+            </button>
           </div>
 
           {/* Navigation Items based on Logged-in Role */}
@@ -88,12 +109,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   Administration
                 </span>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <button
                     type="button"
                     className={`btn-sm ${counterTab === 'sessions' ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '36px', padding: '0 12px' }}
-                    onClick={() => setCounterTab('sessions')}
+                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '38px', padding: '0 12px' }}
+                    onClick={() => handleSelectTab('sessions')}
                   >
                     <LayoutDashboard size={15} />
                     <span>Active Sessions & Parcels</span>
@@ -102,8 +123,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     type="button"
                     className={`btn-sm ${counterTab === 'history' ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '36px', padding: '0 12px' }}
-                    onClick={() => setCounterTab('history')}
+                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '38px', padding: '0 12px' }}
+                    onClick={() => handleSelectTab('history')}
                   >
                     <Receipt size={15} />
                     <span>Bill History</span>
@@ -112,8 +133,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     type="button"
                     className={`btn-sm ${counterTab === 'analytics' ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '36px', padding: '0 12px' }}
-                    onClick={() => setCounterTab('analytics')}
+                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '38px', padding: '0 12px' }}
+                    onClick={() => handleSelectTab('analytics')}
                   >
                     <BarChart3 size={15} />
                     <span>Analytics & Sales</span>
@@ -122,8 +143,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     type="button"
                     className={`btn-sm ${counterTab === 'menu' ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '36px', padding: '0 12px' }}
-                    onClick={() => setCounterTab('menu')}
+                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '38px', padding: '0 12px' }}
+                    onClick={() => handleSelectTab('menu')}
                   >
                     <UtensilsCrossed size={15} />
                     <span>Menu & Pricing</span>
@@ -132,8 +153,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     type="button"
                     className={`btn-sm ${counterTab === 'tables' ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '36px', padding: '0 12px' }}
-                    onClick={() => setCounterTab('tables')}
+                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '38px', padding: '0 12px' }}
+                    onClick={() => handleSelectTab('tables')}
                   >
                     <Grid size={15} />
                     <span>Floor Tables</span>
@@ -142,8 +163,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     type="button"
                     className={`btn-sm ${counterTab === 'staff' ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '36px', padding: '0 12px' }}
-                    onClick={() => setCounterTab('staff')}
+                    style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '38px', padding: '0 12px' }}
+                    onClick={() => handleSelectTab('staff')}
                   >
                     <Users size={15} />
                     <span>Staff & Roles</span>
@@ -171,7 +192,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   type="button"
                   className="btn-primary btn-sm"
-                  style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '36px', padding: '0 12px' }}
+                  style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '38px', padding: '0 12px' }}
+                  onClick={() => {
+                    if (isMobile()) setIsOpen(false);
+                  }}
                 >
                   <Smartphone size={15} />
                   <span>Floor Tables & Ordering</span>
@@ -198,7 +222,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   type="button"
                   className="btn-primary btn-sm"
-                  style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '36px', padding: '0 12px' }}
+                  style={{ justifyContent: 'flex-start', border: 'none', width: '100%', minHeight: '38px', padding: '0 12px' }}
+                  onClick={() => {
+                    if (isMobile()) setIsOpen(false);
+                  }}
                 >
                   <ChefHat size={15} />
                   <span>Preparation Queue</span>
@@ -224,7 +251,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   marginBottom: '10px',
                   cursor: 'pointer',
                 }}
-                onClick={onOpenProfile}
+                onClick={handleProfileClick}
                 title="Click to view profile or change password"
               >
                 <div
@@ -256,7 +283,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 className="btn-secondary btn-sm"
                 style={{ width: '100%', justifyContent: 'center' }}
-                onClick={logout}
+                onClick={handleLogoutClick}
               >
                 <LogOut size={13} />
                 <span>Log Out</span>
