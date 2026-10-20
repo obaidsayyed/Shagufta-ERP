@@ -245,7 +245,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {activeTab === 'dishes' && (
         <div className="panel table-responsive" style={{ padding: 0 }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 700 }}>Individual Dish Sales & Category Share</span>
+            <span style={{ fontWeight: 700 }}>Individual Dish Sales & Performance</span>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
               Historical snapshots preserve dish details even if renamed or repriced later
             </span>
@@ -259,33 +259,20 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             <table>
               <thead>
                 <tr>
-                  <th>Dish Name</th>
-                  <th>Category</th>
-                  <th style={{ textAlign: 'center' }}>Cat Rank</th>
+                  <th className="sticky-col-left" style={{ textAlign: 'left' }}>Dish Name</th>
+                  <th className="desktop-only-column">Category</th>
                   <th style={{ textAlign: 'center' }}>Net Qty Sold</th>
                   <th style={{ textAlign: 'center' }}>Returns/Adjusted</th>
                   <th style={{ textAlign: 'right' }}>Unit Price</th>
                   <th style={{ textAlign: 'right' }}>Net Sales Revenue</th>
-                  <th style={{ textAlign: 'right' }}>Category Share</th>
                 </tr>
               </thead>
               <tbody>
                 {dishPerformance.map((dp) => (
                   <tr key={dp.dish_name}>
-                    <td style={{ fontWeight: 600 }}>{dp.dish_name}</td>
-                    <td>
+                    <td className="sticky-col-left" style={{ fontWeight: 600 }}>{dp.dish_name}</td>
+                    <td className="desktop-only-column">
                       <span className="badge badge-settled">{dp.category_name}</span>
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <span
-                        style={{
-                          fontWeight: 700,
-                          fontSize: '11px',
-                          color: dp.rank_in_category === 1 ? 'var(--accent)' : 'var(--text-secondary)',
-                        }}
-                      >
-                        #{dp.rank_in_category}
-                      </span>
                     </td>
                     <td style={{ textAlign: 'center', fontWeight: 700 }}>{dp.net_quantity_sold}</td>
                     <td style={{ textAlign: 'center', color: dp.cancelled_or_adjusted_quantity > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>
@@ -294,9 +281,6 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     <td style={{ textAlign: 'right' }}>{formatPaiseToINR(dp.unit_price_paise)}</td>
                     <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--text-primary)' }}>
                       {formatPaiseToINR(dp.net_revenue_paise)}
-                    </td>
-                    <td style={{ textAlign: 'right', fontWeight: 600 }}>
-                      {dp.category_revenue_share_percent}%
                     </td>
                   </tr>
                 ))}
@@ -321,7 +305,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             <table>
               <thead>
                 <tr>
-                  <th>Category</th>
+                  <th className="sticky-col-left" style={{ textAlign: 'left' }}>Category</th>
                   <th style={{ textAlign: 'center' }}>Dishes Sold</th>
                   <th style={{ textAlign: 'center' }}>Total Units</th>
                   <th style={{ textAlign: 'right' }}>Total Net Revenue</th>
@@ -331,7 +315,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <tbody>
                 {categoryPerformance.map((cp) => (
                   <tr key={cp.category_name}>
-                    <td style={{ fontWeight: 700 }}>{cp.category_name}</td>
+                    <td className="sticky-col-left" style={{ fontWeight: 700 }}>{cp.category_name}</td>
                     <td style={{ textAlign: 'center' }}>{cp.dish_count}</td>
                     <td style={{ textAlign: 'center' }}>{cp.net_quantity_sold}</td>
                     <td style={{ textAlign: 'right', fontWeight: 700 }}>{formatPaiseToINR(cp.net_revenue_paise)}</td>

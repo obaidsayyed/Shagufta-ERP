@@ -41,7 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Current Staff Badge & Logout */}
       {currentStaff && (
-        <div className="header-user-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="header-user-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           <button
             type="button"
             className="btn-secondary btn-sm"
@@ -56,12 +56,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
           >
             {role === 'admin' ? (
-              <Shield size={14} color="var(--primary-action)" />
+              <Shield size={14} color="var(--primary-action)" style={{ flexShrink: 0 }} />
             ) : (
-              <User size={14} color="var(--text-secondary)" />
+              <User size={14} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
             )}
-            <span style={{ fontWeight: 600 }}>{currentStaff.display_name}</span>
-            <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>({currentStaff.staff_id})</span>
+            <span className="header-staff-name" style={{ fontWeight: 600 }}>{currentStaff.display_name}</span>
+            <span className="header-staff-id" style={{ color: 'var(--text-muted)', fontSize: '11px' }}>({currentStaff.staff_id})</span>
           </button>
 
           <button
@@ -69,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="btn-secondary btn-sm"
             onClick={logout}
             title="Log out"
-            style={{ minHeight: '32px', padding: '4px 10px' }}
+            style={{ minHeight: '32px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}
           >
             <LogOut size={14} />
             <span>Exit</span>
