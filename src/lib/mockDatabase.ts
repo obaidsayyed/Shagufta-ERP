@@ -390,16 +390,41 @@ class MockDatabase {
       if (customer_number !== undefined && (customer_number < 1 || customer_number > 2)) {
         throw new Error('Table capacity reached: A table cannot accommodate more than 2 customers.');
       }
-      const custNum = customer_number === 2 ? 2 : 1;
-      const displayTableNumber = custNum === 2 ? `${targetTable.table_number} (2)` : targetTable.table_number;
+      const custNum = customer_number === 2 || targetTable.table_number.includes('(2)') ? 2 : 1;
 
-      // Find all active open sessions for this table
-      const openSessionsForTable = this.tableSessions.filter(
-        (s) => (s.table_id === table_id || s.table_id === targetTable!.id) && s.session_status === 'open'
-      );
+      // Base table and customer 2 table resolution
+      let baseTable = targetTable;
+      let c2Table: DiningTable | undefined = undefined;
 
-      // Check if session for this specific customer slot already exists
-      const existingSession = openSessionsForTable.find((s) => (s.customer_number || 1) === custNum);
+      if (targetTable.table_number.includes('(2)')) {
+        const baseNum = targetTable.table_number.replace(/\s*\(2\)\s*$/, '').trim();
+        baseTable = this.tables.find((t) => t.table_number.toLowerCase() === baseNum.toLowerCase()) || targetTable;
+        c2Table = targetTable;
+      } else if (custNum === 2) {
+        const c2Num = `${targetTable.table_number.trim()} (2)`;
+        c2Table = this.tables.find((t) => t.table_number.toLowerCase() === c2Num.toLowerCase());
+        if (!c2Table) {
+          c2Table = {
+            id: `tbl-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            table_number: c2Num,
+            is_active: true,
+            created_at: now,
+          };
+          this.tables.push(c2Table);
+        }
+        targetTable = c2Table;
+      }
+
+      const displayTableNumber = custNum === 2 
+        ? (targetTable.table_number.includes('(2)') ? targetTable.table_number : `${targetTable.table_number} (2)`) 
+        : baseTable.table_number;
+
+      // Find active open sessions for this physical table (Customer 1 slot vs Customer 2 slot)
+      const baseSession = this.tableSessions.find((s) => s.table_id === baseTable.id && s.session_status === 'open');
+      const c2Session = c2Table ? this.tableSessions.find((s) => s.table_id === c2Table!.id && s.session_status === 'open') : undefined;
+
+      const existingSession = custNum === 2 ? c2Session : baseSession;
+      const openCount = (baseSession ? 1 : 0) + (c2Session ? 1 : 0);
 
       if (existingSession) {
         session_id = existingSession.id;
@@ -421,7 +446,7 @@ class MockDatabase {
         }
       } else {
         // Enforce max 2 customers per table
-        if (openSessionsForTable.length >= 2) {
+        if (openCount >= 2) {
           throw new Error('Table capacity reached: A table cannot accommodate more than 2 customers.');
         }
 

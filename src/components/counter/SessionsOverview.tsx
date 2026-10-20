@@ -61,8 +61,10 @@ export const SessionsOverview: React.FC<SessionsOverviewProps> = ({
         ) : (
           <div className="sessions-grid">
             {activeTableSessions.map((session) => {
-              const baseTableNumber = tableMap.get(session.table_id) || 'Table';
-              const tableNumber = session.customer_number === 2 ? `${baseTableNumber} (2)` : baseTableNumber;
+              const rawTableNumber = tableMap.get(session.table_id) || 'Table';
+              const tableNumber = rawTableNumber.includes('(2)') || session.customer_number === 2
+                ? (rawTableNumber.includes('(2)') ? rawTableNumber : `${rawTableNumber} (2)`)
+                : rawTableNumber;
               const bill = bills.find((b) => b.table_session_id === session.id);
               const items = orderItems.filter((oi) => oi.table_session_id === session.id);
               const totalItems = items.reduce((sum, oi) => sum + (oi.ordered_quantity - oi.cancelled_quantity), 0);

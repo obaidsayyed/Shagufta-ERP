@@ -87,9 +87,9 @@ export const TableManagementView: React.FC<TableManagementViewProps> = ({
         </div>
       )}
 
-      {/* Tables Grid */}
+      {/* Tables Grid - Shows physical tables only */}
       <div className="tables-management-grid">
-        {tables.map((tbl) => {
+        {tables.filter((t) => !t.table_number.includes('(2)')).map((tbl) => {
           const hasOpenSession = tableSessions.some((s) => s.table_id === tbl.id && s.session_status === 'open');
           return (
             <div

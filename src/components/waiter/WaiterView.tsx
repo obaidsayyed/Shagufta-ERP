@@ -79,12 +79,18 @@ export const WaiterView: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  const baseTables = tables.filter((t) => !t.table_number.includes('(2)'));
   const selectedTable = tables.find((t) => t.id === selectedTableId);
-  const openSessionsForTable = tableSessions.filter(
-    (s) => s.table_id === selectedTableId && s.session_status === 'open'
-  );
-  const customer1Session = openSessionsForTable.find((s) => (s.customer_number || 1) === 1);
-  const customer2Session = openSessionsForTable.find((s) => s.customer_number === 2);
+  const c2Table = selectedTable ? tables.find((t) => t.table_number.toLowerCase() === `${selectedTable.table_number.toLowerCase()} (2)`) : null;
+
+  const customer1Session = selectedTable ? tableSessions.find(
+    (s) => s.table_id === selectedTable.id && s.session_status === 'open' && (s.customer_number || 1) === 1
+  ) : null;
+
+  const customer2Session = selectedTable ? tableSessions.find(
+    (s) => ((c2Table && s.table_id === c2Table.id) || (s.table_id === selectedTable.id && s.customer_number === 2)) && s.session_status === 'open'
+  ) : null;
+
   const currentSession = selectedCustomerNumber === 1 ? customer1Session : customer2Session;
   const currentDisplayTable = selectedCustomerNumber === 2
     ? `${selectedTable?.table_number || 'Table'} (2)`
@@ -210,9 +216,13 @@ export const WaiterView: React.FC = () => {
               </div>
             ) : (
               <div className="table-square-grid">
-                {tables.map((tbl) => {
-                  const openSessions = tableSessions.filter((s) => s.table_id === tbl.id && s.session_status === 'open');
-                  const count = openSessions.length;
+                {baseTables.map((tbl) => {
+                  const c2 = tables.find((t) => t.table_number.toLowerCase() === `${tbl.table_number.toLowerCase()} (2)`);
+                  const s1 = tableSessions.find((s) => s.table_id === tbl.id && s.session_status === 'open');
+                  const s2 = c2 ? tableSessions.find((s) => s.table_id === c2.id && s.session_status === 'open') : null;
+                  const mockS2 = tableSessions.find((s) => s.table_id === tbl.id && s.customer_number === 2 && s.session_status === 'open');
+                  const activeCust2 = s2 || mockS2;
+                  const count = (s1 ? 1 : 0) + (activeCust2 ? 1 : 0);
                   const isFull = count >= 2;
                   const isOccupied = count > 0;
                   return (
@@ -498,8 +508,8 @@ export const WaiterView: React.FC = () => {
                   )}
                 </div>
 
-                {/* Category pills */}
-                <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
+                {/* Category pills - wrapped to prevent horizontal scrolling */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     className={`btn-sm ${selectedCategoryId === 'all' ? 'btn-primary' : 'btn-secondary'}`}

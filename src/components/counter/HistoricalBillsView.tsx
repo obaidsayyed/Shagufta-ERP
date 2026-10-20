@@ -30,7 +30,10 @@ export const HistoricalBillsView: React.FC<HistoricalBillsViewProps> = ({
   const sessionTableMap = new Map(
     tableSessions.map((s) => {
       const base = tableMap.get(s.table_id) || 'Table';
-      return [s.id, s.customer_number === 2 ? `${base} (2)` : base];
+      const name = base.includes('(2)') || s.customer_number === 2
+        ? (base.includes('(2)') ? base : `${base} (2)`)
+        : base;
+      return [s.id, name];
     })
   );
   const parcelMap = new Map(parcelOrders.map((p) => [p.id, p.parcel_code]));

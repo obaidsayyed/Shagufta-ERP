@@ -393,8 +393,8 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
         </div>
       )}
 
-      {/* Category selector pills */}
-      <div className="panel" style={{ padding: '10px 14px', marginBottom: '14px', display: 'flex', gap: '6px', overflowX: 'auto' }}>
+      {/* Category selector pills - wrapped to prevent horizontal scrolling */}
+      <div className="panel" style={{ padding: '8px 10px', marginBottom: '12px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
         <button
           type="button"
           className={`btn-sm ${selectedCategoryId === 'all' ? 'btn-primary' : 'btn-secondary'}`}

@@ -592,8 +592,9 @@ describe('Hotel Order Management System — Comprehensive Operational Tests', ()
       });
     }).not.toThrow();
 
-    // Verify open sessions count for this table is exactly 2
-    const openSessions = mockDb.getTableSessions().filter((s) => s.table_id === table.id && s.session_status === 'open');
+    // Verify open sessions count for this physical table is exactly 2 (Customer 1 slot + Customer 2 slot)
+    const c2Table = mockDb.getTables().find((t) => t.table_number === `${table.table_number} (2)`)!;
+    const openSessions = mockDb.getTableSessions().filter((s) => (s.table_id === table.id || s.table_id === c2Table.id) && s.session_status === 'open');
     expect(openSessions.length).toBe(2);
 
     // If attempting to open a 3rd customer session on the table -> must throw error
@@ -617,7 +618,7 @@ describe('Hotel Order Management System — Comprehensive Operational Tests', ()
     expect(cust1Bill.status).toBe('settled');
     // Customer 2 session is still open and running
     expect(cust2Bill.status).toBe('unsettled');
-    const remainingOpenSessions = mockDb.getTableSessions().filter((s) => s.table_id === table.id && s.session_status === 'open');
+    const remainingOpenSessions = mockDb.getTableSessions().filter((s) => (s.table_id === table.id || s.table_id === c2Table.id) && s.session_status === 'open');
     expect(remainingOpenSessions.length).toBe(1);
     expect(remainingOpenSessions[0].id).toBe(cust2Session.id);
 

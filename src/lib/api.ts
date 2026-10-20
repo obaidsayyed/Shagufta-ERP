@@ -484,6 +484,31 @@ export const api = {
     return mockDb.getBillAdjustments();
   },
 
+  async getOrCreateCustomer2Table(baseTable: DiningTable): Promise<DiningTable> {
+    const targetNum = `${baseTable.table_number.trim()} (2)`;
+    const allTables = await this.getTables();
+    const existing = allTables.find(
+      (t) => t.table_number.toLowerCase() === targetNum.toLowerCase()
+    );
+    if (existing) {
+      if (!existing.is_active) {
+        return this.toggleTableActive(existing.id, true);
+      }
+      return existing;
+    }
+
+    try {
+      return await this.createTable(targetNum);
+    } catch {
+      const refreshed = await this.getTables();
+      const found = refreshed.find(
+        (t) => t.table_number.toLowerCase() === targetNum.toLowerCase()
+      );
+      if (found) return found;
+      return mockDb.createTable(targetNum);
+    }
+  },
+
   // 5. Atomic Order Submission RPC
   async submitOrder(params: {
     order_type: 'dine_in' | 'parcel';
@@ -494,13 +519,25 @@ export const api = {
     idempotency_key?: string;
     caller_staff: StaffProfile;
   }): Promise<{ status: string; order_id: string; ticket_number: string; table_session_id?: string; parcel_id?: string; parcel_code?: string; bill_id: string }> {
+    let effectiveTableId = params.table_id;
+    if (params.order_type === 'dine_in' && params.table_id && params.customer_number === 2) {
+      const allTables = await this.getTables();
+      const baseTable = allTables.find(
+        (t) => t.id === params.table_id || t.table_number.toLowerCase() === params.table_id!.toLowerCase()
+      );
+      if (baseTable && !baseTable.table_number.includes('(2)')) {
+        const c2Table = await this.getOrCreateCustomer2Table(baseTable);
+        effectiveTableId = c2Table.id;
+      }
+    }
+
     // Proactively pre-register table in mockDb if needed so fallback is 100% immune to target table errors
-    if (params.table_id) {
-      const existing = mockDb.getTables().find((t) => t.id === params.table_id || t.table_number.toLowerCase() === params.table_id!.toLowerCase());
+    if (effectiveTableId) {
+      const existing = mockDb.getTables().find((t) => t.id === effectiveTableId || t.table_number.toLowerCase() === effectiveTableId!.toLowerCase());
       if (!existing) {
         mockDb.syncTables([{
-          id: params.table_id,
-          table_number: params.table_id.length > 8 ? `T${mockDb.getTables().length + 1}` : params.table_id,
+          id: effectiveTableId,
+          table_number: effectiveTableId.length > 8 ? `T${mockDb.getTables().length + 1}` : effectiveTableId,
           is_active: true,
           created_at: new Date().toISOString(),
         }]);
@@ -511,7 +548,7 @@ export const api = {
       try {
         const { data, error } = await supabase.rpc('rpc_submit_order', {
           p_order_type: params.order_type,
-          p_table_id: params.table_id || null,
+          p_table_id: effectiveTableId || null,
           p_parcel_customer_notes: params.parcel_customer_notes || null,
           p_items: params.items,
           p_idempotency_key: params.idempotency_key || null,
@@ -525,7 +562,10 @@ export const api = {
       }
     }
 
-    return mockDb.rpcSubmitOrder(params);
+    return mockDb.rpcSubmitOrder({
+      ...params,
+      table_id: effectiveTableId,
+    });
   },
 
   // 6. Kitchen Grouping and Preparation Logic
@@ -545,7 +585,10 @@ export const api = {
     const sessions = mockDb.getTableSessions();
     const sessionTableMap = new Map(sessions.map((s) => {
       const base = tableMap.get(s.table_id) || 'Table';
-      return [s.id, s.customer_number === 2 ? `${base} (2)` : base];
+      const name = base.includes('(2)') || s.customer_number === 2
+        ? (base.includes('(2)') ? base : `${base} (2)`)
+        : base;
+      return [s.id, name];
     }));
 
     const groupsMap = new Map<string, KitchenPreparationGroup>();
