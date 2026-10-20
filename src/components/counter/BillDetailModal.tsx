@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bill, OrderItem, BillAdjustment } from '../../types/database';
 import { formatPaiseToINR } from '../../lib/currency';
-import { X, Receipt, CheckCircle, Clock, Printer } from 'lucide-react';
+
 
 interface BillDetailModalProps {
   isOpen: boolean;
@@ -30,16 +30,13 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '640px' }}>
+      <div className="modal-content" style={{ maxWidth: '600px' }}>
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Receipt size={18} color="var(--accent)" />
-            <div>
-              <h3>Bill: {bill.bill_number}</h3>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                Target: <strong>{identifierTitle}</strong>
-              </span>
-            </div>
+          <div>
+            <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Bill: {bill.bill_number}</h3>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              Target: <strong>{identifierTitle}</strong>
+            </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -50,21 +47,21 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
             ) : (
               <span className="badge badge-pending">UNSETTLED RUNNING BILL</span>
             )}
-            <button type="button" className="btn-secondary btn-sm" onClick={onClose} style={{ border: 'none', padding: '4px' }}>
-              <X size={16} />
+            <button type="button" className="btn-secondary btn-sm" onClick={onClose} style={{ padding: '2px 8px', fontSize: '11px' }}>
+              Close
             </button>
           </div>
         </div>
 
-        <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+        <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto', padding: '12px 14px' }}>
           {/* Order Items Table */}
-          <div style={{ marginBottom: '14px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+          <div style={{ marginBottom: '12px' }}>
+            <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
               ITEMIZED ORDERS
             </span>
 
             {orderItems.length === 0 ? (
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>No dishes ordered yet.</p>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No dishes ordered yet.</p>
             ) : (
               <div className="table-responsive">
                 <table>
@@ -85,7 +82,7 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
                       return (
                         <tr key={item.id} style={{ opacity: item.status === 'cancelled' ? 0.6 : 1 }}>
                           <td>
-                            <div style={{ fontWeight: 600 }}>{item.dish_name}</div>
+                            <div style={{ fontWeight: 600, fontSize: '12.5px' }}>{item.dish_name}</div>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.category_name}</div>
                           </td>
                           <td style={{ textAlign: 'center', fontWeight: 600 }}>
@@ -107,15 +104,15 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
                               </span>
                             )}
                           </td>
-                          <td style={{ textAlign: 'right' }}>{formatPaiseToINR(item.unit_price_paise)}</td>
-                          <td style={{ textAlign: 'right', fontWeight: 700 }}>{formatPaiseToINR(lineTotal)}</td>
+                          <td style={{ textAlign: 'right', fontSize: '12px' }}>{formatPaiseToINR(item.unit_price_paise)}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '12.5px' }}>{formatPaiseToINR(lineTotal)}</td>
                           {!isSettled && (
                             <td style={{ textAlign: 'center' }}>
                               {activeQty > 0 && (
                                 <button
                                   type="button"
                                   className="btn-secondary btn-sm"
-                                  style={{ fontSize: '11px', padding: '2px 6px' }}
+                                  style={{ fontSize: '10.5px', padding: '2px 6px' }}
                                   onClick={() => onOpenAdjustment(item)}
                                 >
                                   Adjust
@@ -134,18 +131,18 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
 
           {/* Adjustments Section */}
           {adjustments.length > 0 && (
-            <div style={{ marginBottom: '14px', backgroundColor: 'var(--bg-surface-subtle)', padding: '10px', borderRadius: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+            <div style={{ marginBottom: '12px', backgroundColor: 'var(--bg-surface-subtle)', padding: '8px 10px', borderRadius: '5px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                 RECORDED ADJUSTMENTS & RETURNS
               </span>
               {adjustments.map((adj) => (
-                <div key={adj.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '3px 0' }}>
+                <div key={adj.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', padding: '2px 0' }}>
                   <div>
                     <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>
                       {adj.adjustment_type.replace(/_/g, ' ')}
                     </span>
                     <span style={{ color: 'var(--text-muted)', marginLeft: '6px' }}>
-                      ({adj.reason} — by {adj.authorized_by_staff_id})
+                      ({adj.reason} by {adj.authorized_by_staff_id})
                     </span>
                   </div>
                   <strong style={{ color: 'var(--danger)' }}>
@@ -157,26 +154,25 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
           )}
 
           {/* Totals Summary */}
-          <div style={{ borderTop: '1px solid var(--border-strong)', paddingTop: '10px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px' }}>
+          <div style={{ borderTop: '1px solid var(--border-strong)', paddingTop: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', fontSize: '12px' }}>
               <span style={{ color: 'var(--text-secondary)' }}>Gross Subtotal:</span>
               <span>{formatPaiseToINR(bill.subtotal_paise)}</span>
             </div>
             {bill.adjustments_paise !== 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px', color: 'var(--danger)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', fontSize: '12px', color: 'var(--danger)' }}>
                 <span>Adjustments / Returns:</span>
                 <span>{formatPaiseToINR(bill.adjustments_paise)}</span>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '17px', marginTop: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '15px', marginTop: '4px' }}>
               <span>Final Total Due:</span>
               <span style={{ color: 'var(--text-primary)' }}>{formatPaiseToINR(bill.final_total_paise)}</span>
             </div>
           </div>
 
           {isSettled && (
-            <div style={{ marginTop: '12px', padding: '8px 12px', backgroundColor: 'var(--success-bg)', borderRadius: '6px', fontSize: '12px', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <CheckCircle size={15} />
+            <div style={{ marginTop: '10px', padding: '6px 10px', backgroundColor: 'var(--success-bg)', borderRadius: '5px', fontSize: '11.5px', color: 'var(--success)' }}>
               <span>
                 Settled on {bill.settled_at ? new Date(bill.settled_at).toLocaleString('en-IN') : 'N/A'} via <strong>{bill.payment_method?.toUpperCase()}</strong> by staff {bill.settled_by_staff_id || 'Admin'}.
               </span>
@@ -184,27 +180,26 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
           )}
         </div>
 
-        <div className="modal-footer">
+        <div className="modal-footer" style={{ padding: '8px 14px' }}>
           <button
             type="button"
-            className="btn-primary"
+            className="btn-primary btn-sm"
             style={{ backgroundColor: 'var(--primary-action)', borderColor: 'var(--primary-action)', color: '#FFFFFF', fontWeight: 700 }}
             onClick={() => window.print()}
           >
-            <Printer size={15} />
             <span>Print Bill</span>
           </button>
           {!isSettled && (
             <button
               type="button"
-              className="btn-success"
+              className="btn-success btn-sm"
               style={{ fontWeight: 700 }}
               onClick={onOpenSettlement}
             >
               Collect & Settle Bill
             </button>
           )}
-          <button type="button" className="btn-secondary" onClick={onClose}>
+          <button type="button" className="btn-secondary btn-sm" onClick={onClose}>
             Close
           </button>
         </div>

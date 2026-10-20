@@ -22,15 +22,7 @@ import { MenuManagementView } from './MenuManagementView';
 import { TableManagementView } from './TableManagementView';
 import { StaffManagementView } from './StaffManagementView';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
-import { 
-  LayoutDashboard, 
-  Receipt, 
-  UtensilsCrossed, 
-  Grid, 
-  Users, 
-  BarChart3,
-  RefreshCw 
-} from 'lucide-react';
+
 
 interface CounterViewProps {
   activeTab?: 'sessions' | 'history' | 'menu' | 'tables' | 'staff' | 'analytics';

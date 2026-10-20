@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import { MenuItem, MenuCategory } from '../../types/database';
 import { formatPaiseToINR } from '../../lib/currency';
-import { X, Plus, Minus, Package, AlertCircle, Send } from 'lucide-react';
+
 
 interface CreateParcelModalProps {
   isOpen: boolean;
@@ -95,51 +95,47 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '640px' }}>
+      <div className="modal-content" style={{ maxWidth: '560px' }}>
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Package size={18} color="var(--accent)" />
-            <h3>Create Takeaway Parcel Order</h3>
-          </div>
-          <button type="button" className="btn-secondary btn-sm" onClick={onClose} style={{ border: 'none', padding: '4px' }}>
-            <X size={16} />
+          <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Create Takeaway Parcel Order</h3>
+          <button type="button" className="btn-secondary btn-sm" onClick={onClose} style={{ padding: '2px 8px', fontSize: '11px' }}>
+            Close
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+          <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto', padding: '12px 14px' }}>
             {errorMessage && (
-              <div className="alert-banner alert-banner-danger">
-                <AlertCircle size={15} />
+              <div className="alert-banner alert-banner-danger" style={{ marginBottom: '10px', padding: '6px 10px' }}>
                 <span>{errorMessage}</span>
               </div>
             )}
 
-            <div style={{ marginBottom: '12px' }}>
-              <label htmlFor="parcel-notes">Customer Name / Contact / Notes (Optional)</label>
+            <div style={{ marginBottom: '10px' }}>
+              <label htmlFor="parcel-notes" style={{ fontSize: '12px', fontWeight: 600 }}>Customer Name / Contact / Notes (Optional)</label>
               <input
                 id="parcel-notes"
                 type="text"
                 placeholder="e.g. Mr. Sharma (Pick up in 15 mins, extra chutney)"
                 value={customerNotes}
                 onChange={(e) => setCustomerNotes(e.target.value)}
-                style={{ width: '100%' }}
+                style={{ width: '100%', minHeight: '32px' }}
               />
             </div>
 
             {/* Dish selector */}
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
               <input
                 type="text"
                 placeholder="Filter dishes..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ flex: 1, minHeight: '32px' }}
+                style={{ flex: 1, minHeight: '30px', fontSize: '12px' }}
               />
               <select
                 value={selectedCatId}
                 onChange={(e) => setSelectedCatId(e.target.value)}
-                style={{ minHeight: '32px', fontSize: '12px' }}
+                style={{ minHeight: '30px', fontSize: '12px' }}
               >
                 <option value="all">All Categories</option>
                 {categories.map((c) => (
@@ -148,8 +144,8 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
               </select>
             </div>
 
-            {/* Dishes list: Crisp White cards with Deep Obsidian Black text */}
-            <div style={{ maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', padding: '2px' }}>
+            {/* Dishes list */}
+            <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '5px', padding: '1px' }}>
               {filteredDishes.map((dish) => {
                 const qty = cart[dish.id] || 0;
                 return (
@@ -159,34 +155,34 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '8px 12px',
+                      padding: '6px 10px',
                       backgroundColor: '#FFFFFF',
                       color: '#0F172A',
-                      borderRadius: '6px',
+                      borderRadius: '5px',
                       border: qty > 0 ? '2px solid var(--primary-action)' : '1px solid #E2E8F0',
                     }}
                   >
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '13px', color: '#0F172A' }}>{dish.name}</div>
-                      <div style={{ marginTop: '2px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>
+                      <div style={{ fontWeight: 700, fontSize: '12.5px', color: '#0F172A' }}>{dish.name}</div>
+                      <div style={{ marginTop: '1px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A' }}>
                           {formatPaiseToINR(dish.price_paise)}
                         </span>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                       {qty > 0 && (
                         <>
                           <button
                             type="button"
                             className="btn-secondary btn-sm"
-                            style={{ width: '26px', height: '26px', padding: 0, backgroundColor: '#F1F5F9', color: '#0F172A', border: '1px solid #CBD5E1' }}
+                            style={{ width: '24px', height: '24px', padding: 0, backgroundColor: '#F1F5F9', color: '#0F172A', border: '1px solid #CBD5E1', fontSize: '14px', lineHeight: '22px' }}
                             onClick={() => removeFromCart(dish.id)}
                           >
-                            <Minus size={11} />
+                            -
                           </button>
-                          <span style={{ fontWeight: 800, minWidth: '18px', textAlign: 'center', color: '#0F172A' }}>
+                          <span style={{ fontWeight: 800, minWidth: '16px', textAlign: 'center', color: '#0F172A', fontSize: '12px' }}>
                             {qty}
                           </span>
                         </>
@@ -194,10 +190,10 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
                       <button
                         type="button"
                         className="btn-primary btn-sm"
-                        style={{ width: '26px', height: '26px', padding: 0 }}
+                        style={{ width: '24px', height: '24px', padding: 0, fontSize: '14px', lineHeight: '22px' }}
                         onClick={() => addToCart(dish.id)}
                       >
-                        <Plus size={11} />
+                        +
                       </button>
                     </div>
                   </div>
@@ -207,38 +203,37 @@ export const CreateParcelModal: React.FC<CreateParcelModalProps> = ({
 
             {/* Selected items review */}
             {totalQty > 0 && (
-              <div style={{ marginTop: '14px', backgroundColor: 'var(--bg-surface-elevated)', border: '1px solid var(--border-subtle)', padding: '10px 12px', borderRadius: '6px' }}>
-                <span style={{ fontWeight: 700, fontSize: '12px', color: 'var(--text-secondary)' }}>
+              <div style={{ marginTop: '10px', backgroundColor: 'var(--bg-surface-elevated)', border: '1px solid var(--border-subtle)', padding: '8px 10px', borderRadius: '5px' }}>
+                <span style={{ fontWeight: 700, fontSize: '11px', color: 'var(--text-secondary)' }}>
                   Parcel Items Summary ({totalQty} items):
                 </span>
-                <div style={{ marginTop: '6px' }}>
+                <div style={{ marginTop: '4px' }}>
                   {cartEntries.map((e) => (
-                    <div key={e.item!.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '2px 0', color: 'var(--text-primary)' }}>
-                      <span>{e.item!.name} × {e.qty}</span>
+                    <div key={e.item!.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', padding: '1px 0', color: 'var(--text-primary)' }}>
+                      <span>{e.item!.name} x {e.qty}</span>
                       <span style={{ fontWeight: 700 }}>{formatPaiseToINR(e.totalPaise)}</span>
                     </div>
                   ))}
-                  <div style={{ borderTop: '1px solid var(--border-strong)', marginTop: '6px', paddingTop: '6px', display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  <div style={{ borderTop: '1px solid var(--border-strong)', marginTop: '4px', paddingTop: '4px', display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: 'var(--text-primary)', fontSize: '12px' }}>
                     <span>Estimated Amount Due</span>
-                    <span style={{ color: 'var(--text-primary)', fontSize: '14px' }}>{formatPaiseToINR(totalPaise)}</span>
+                    <span style={{ color: 'var(--text-primary)', fontSize: '13px' }}>{formatPaiseToINR(totalPaise)}</span>
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn-secondary" onClick={onClose}>
+          <div className="modal-footer" style={{ padding: '8px 14px' }}>
+            <button type="button" className="btn-secondary btn-sm" onClick={onClose}>
               Cancel
             </button>
             <button
               type="submit"
-              className="btn-primary"
-              style={{ fontWeight: 700, minHeight: '40px' }}
+              className="btn-primary btn-sm"
+              style={{ fontWeight: 700, minHeight: '32px' }}
               disabled={isSubmitting || totalQty === 0}
             >
-              <Send size={15} />
-              <span>{isSubmitting ? 'Sending to Kitchen (KOT)...' : `Send to Kitchen (KOT) (${totalQty} items)`}</span>
+              {isSubmitting ? 'Sending to Kitchen (KOT)...' : `Send to Kitchen (${totalQty} items)`}
             </button>
           </div>
         </form>

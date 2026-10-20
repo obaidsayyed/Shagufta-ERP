@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import { OrderItem, AdjustmentType } from '../../types/database';
 import { formatPaiseToINR } from '../../lib/currency';
-import { X, AlertTriangle } from 'lucide-react';
+
 
 interface ItemAdjustmentModalProps {
   isOpen: boolean;
@@ -58,28 +58,25 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '480px' }}>
+      <div className="modal-content" style={{ maxWidth: '440px' }}>
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <AlertTriangle size={17} color="var(--warning)" />
-            <h3>Adjust Bill Item: {orderItem.dish_name}</h3>
-          </div>
-          <button type="button" className="btn-secondary btn-sm" onClick={onClose} style={{ border: 'none', padding: '4px' }}>
-            <X size={16} />
+          <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Adjust Bill Item: {orderItem.dish_name}</h3>
+          <button type="button" className="btn-secondary btn-sm" onClick={onClose} style={{ padding: '2px 8px', fontSize: '11px' }}>
+            Close
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="modal-body">
+          <div className="modal-body" style={{ padding: '12px 14px' }}>
             {errorMessage && (
-              <div className="alert-banner alert-banner-danger" style={{ marginBottom: '12px' }}>
+              <div className="alert-banner alert-banner-danger" style={{ marginBottom: '10px', padding: '6px 10px' }}>
                 <span>{errorMessage}</span>
               </div>
             )}
 
             {/* Dish Info Context */}
-            <div style={{ backgroundColor: 'var(--bg-surface-subtle)', padding: '10px 12px', borderRadius: '6px', marginBottom: '14px', fontSize: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <div style={{ backgroundColor: 'var(--bg-surface-subtle)', padding: '8px 10px', borderRadius: '5px', marginBottom: '12px', fontSize: '11.5px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
                 <span>Unit Price: <strong>{formatPaiseToINR(orderItem.unit_price_paise)}</strong></span>
                 <span>Active Ordered: <strong>{activeOrderedQty}</strong></span>
               </div>
@@ -90,8 +87,8 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
             </div>
 
             {/* Adjustment Type Selection */}
-            <div style={{ marginBottom: '12px' }}>
-              <label htmlFor="adjustment-type-select">Adjustment Scenario</label>
+            <div style={{ marginBottom: '10px' }}>
+              <label htmlFor="adjustment-type-select" style={{ fontSize: '12px', fontWeight: 600 }}>Adjustment Scenario</label>
               <select
                 id="adjustment-type-select"
                 value={adjustmentType}
@@ -100,7 +97,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                   setAdjustmentType(val);
                   setQuantity(1);
                 }}
-                style={{ width: '100%' }}
+                style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
               >
                 <option value="item_cancellation">Unprepared Item Cancellation (Removes from Kitchen Queue)</option>
                 <option value="quantity_reduction">Quantity Reduction (Reduces Unprepared Count)</option>
@@ -111,8 +108,8 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
             </div>
 
             {/* Quantity */}
-            <div style={{ marginBottom: '12px' }}>
-              <label htmlFor="adjust-qty-input">Quantity to Deduct (Max: {maxPossibleQty})</label>
+            <div style={{ marginBottom: '10px' }}>
+              <label htmlFor="adjust-qty-input" style={{ fontSize: '12px', fontWeight: 600 }}>Quantity to Deduct (Max: {maxPossibleQty})</label>
               <input
                 id="adjust-qty-input"
                 type="number"
@@ -120,13 +117,13 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                 max={maxPossibleQty}
                 value={quantity}
                 onChange={(e) => setQuantity(Math.min(maxPossibleQty, Math.max(1, parseInt(e.target.value) || 1)))}
-                style={{ width: '100%' }}
+                style={{ width: '100%', minHeight: '30px' }}
                 required
               />
             </div>
 
             {/* Deducted Amount Calculation */}
-            <div style={{ marginBottom: '14px', fontSize: '13px' }}>
+            <div style={{ marginBottom: '12px', fontSize: '12px' }}>
               <span>Bill Deduction Amount: </span>
               <strong style={{ color: 'var(--danger)' }}>
                 -{formatPaiseToINR(orderItem.unit_price_paise * quantity)}
@@ -135,26 +132,26 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
 
             {/* Audit Reason */}
             <div>
-              <label htmlFor="adjust-reason-input">Reason for Adjustment / Return (Mandatory Audit Log)</label>
+              <label htmlFor="adjust-reason-input" style={{ fontSize: '12px', fontWeight: 600 }}>Reason for Adjustment / Return (Mandatory Audit Log)</label>
               <textarea
                 id="adjust-reason-input"
                 rows={2}
                 placeholder="e.g. Customer cancelled before cooking started / returned due to taste issue"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                style={{ width: '100%', resize: 'none' }}
+                style={{ width: '100%', resize: 'none', fontSize: '12px' }}
                 required
               />
             </div>
           </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn-secondary" onClick={onClose}>
+          <div className="modal-footer" style={{ padding: '8px 14px' }}>
+            <button type="button" className="btn-secondary btn-sm" onClick={onClose}>
               Cancel
             </button>
             <button
               type="submit"
-              className="btn-danger"
+              className="btn-danger btn-sm"
               disabled={isSubmitting || !reason.trim() || quantity <= 0}
             >
               {isSubmitting ? 'Recording Adjustment...' : 'Apply Adjustment to Bill'}

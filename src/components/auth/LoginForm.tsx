@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
-import { Shield, KeyRound, AlertCircle, Eye, EyeOff, Mail, CheckCircle, X } from 'lucide-react';
 
 export const LoginForm: React.FC = () => {
   const { login } = useAuth();
@@ -77,47 +76,31 @@ export const LoginForm: React.FC = () => {
       <div
         className="panel"
         style={{
-          maxWidth: '420px',
+          maxWidth: '380px',
           width: '100%',
-          padding: '32px 28px',
+          padding: '24px 22px',
           backgroundColor: 'var(--bg-surface-elevated)',
           border: '1px solid var(--border-strong)',
           borderRadius: '8px',
         }}
       >
-        <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-          <div
-            style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '8px',
-              backgroundColor: 'var(--accent-subtle)',
-              color: 'var(--primary-action)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '12px',
-            }}
-          >
-            <Shield size={26} color="var(--primary-action)" />
-          </div>
-          <h1 style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
+        <div style={{ marginBottom: '18px', textAlign: 'center' }}>
+          <h1 style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
             Hotel Operations Terminal
           </h1>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+          <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '3px' }}>
             Authorized Counter, Waiter & Kitchen Staff Login
           </p>
         </div>
 
         {errorMsg && (
-          <div className="alert-banner alert-banner-danger" style={{ marginBottom: '16px' }}>
-            <AlertCircle size={15} />
+          <div className="alert-banner alert-banner-danger" style={{ marginBottom: '14px' }}>
             <span>{errorMsg}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '14px' }}>
             <label htmlFor="login-identifier">Staff ID or Email</label>
             <input
               id="login-identifier"
@@ -127,7 +110,7 @@ export const LoginForm: React.FC = () => {
               onChange={(e) => setIdentifier(e.target.value)}
               required
               autoFocus
-              style={{ width: '100%', minHeight: '42px' }}
+              style={{ width: '100%', minHeight: '38px' }}
             />
           </div>
 
@@ -164,24 +147,25 @@ export const LoginForm: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                style={{ width: '100%', minHeight: '42px', paddingRight: '42px' }}
+                style={{ width: '100%', minHeight: '38px', paddingRight: '48px' }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                title={showPassword ? 'Hide password' : 'Show password'}
                 style={{
                   position: 'absolute',
                   right: '4px',
                   background: 'none',
                   border: 'none',
-                  padding: '8px',
+                  padding: '4px 6px',
                   color: 'var(--text-muted)',
                   cursor: 'pointer',
                   minHeight: 'auto',
+                  fontSize: '11px',
+                  fontWeight: 600,
                 }}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
           </div>
@@ -189,17 +173,16 @@ export const LoginForm: React.FC = () => {
           <button
             type="submit"
             className="btn-primary"
-            style={{ width: '100%', minHeight: '44px', fontSize: '14px', fontWeight: 700, marginTop: '14px' }}
+            style={{ width: '100%', minHeight: '40px', fontSize: '13.5px', fontWeight: 700, marginTop: '12px' }}
             disabled={loading}
           >
-            <KeyRound size={16} />
-            <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
+            {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
 
-        <div style={{ marginTop: '22px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', textAlign: 'center' }}>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-            Accounts are provisioned by the Administrator. Only authorized active staff can sign in.
+        <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', textAlign: 'center' }}>
+          <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+            Accounts are provisioned by Administrator. Only authorized staff can sign in.
           </p>
         </div>
       </div>
@@ -207,38 +190,33 @@ export const LoginForm: React.FC = () => {
       {/* Forgot Password Modal */}
       {showForgotModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '400px' }}>
+          <div className="modal-content" style={{ maxWidth: '380px' }}>
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Mail size={18} color="var(--primary-action)" />
-                <h3 style={{ color: 'var(--text-primary)' }}>Reset Password</h3>
-              </div>
+              <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>Reset Password</h3>
               <button
                 type="button"
                 className="btn-secondary btn-sm"
                 onClick={() => setShowForgotModal(false)}
-                style={{ border: 'none', padding: '4px' }}
+                style={{ padding: '2px 8px', fontSize: '11px' }}
               >
-                <X size={16} />
+                Close
               </button>
             </div>
 
             <form onSubmit={handleForgotPassword}>
               <div className="modal-body">
-                <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '14px' }}>
-                  Enter your registered staff email address. A password reset link will be sent to your email directly by Supabase.
+                <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: 1.4, marginBottom: '12px' }}>
+                  Enter your registered staff email address to receive a password reset link.
                 </p>
 
                 {resetSuccess && (
-                  <div className="alert-banner alert-banner-info" style={{ marginBottom: '14px' }}>
-                    <CheckCircle size={15} color="var(--success)" />
+                  <div className="alert-banner alert-banner-info" style={{ marginBottom: '12px' }}>
                     <span>{resetSuccess}</span>
                   </div>
                 )}
 
                 {resetError && (
-                  <div className="alert-banner alert-banner-danger" style={{ marginBottom: '14px' }}>
-                    <AlertCircle size={15} />
+                  <div className="alert-banner alert-banner-danger" style={{ marginBottom: '12px' }}>
                     <span>{resetError}</span>
                   </div>
                 )}
@@ -252,7 +230,7 @@ export const LoginForm: React.FC = () => {
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     required
-                    style={{ width: '100%', minHeight: '40px' }}
+                    style={{ width: '100%', minHeight: '36px' }}
                   />
                 </div>
               </div>
@@ -271,7 +249,7 @@ export const LoginForm: React.FC = () => {
                   className="btn-primary"
                   disabled={resetLoading}
                 >
-                  {resetLoading ? 'Sending Link...' : 'Send Reset Link'}
+                  {resetLoading ? 'Sending...' : 'Send Link'}
                 </button>
               </div>
             </form>

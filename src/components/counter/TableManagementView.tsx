@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { api } from '../../lib/api';
 import { DiningTable, TableSession } from '../../types/database';
-import { Plus, Check, X, AlertCircle } from 'lucide-react';
+
 
 interface TableManagementViewProps {
   tables: DiningTable[];
@@ -51,43 +51,41 @@ export const TableManagementView: React.FC<TableManagementViewProps> = ({
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
         <div>
-          <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Table Management</h2>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Table Management</h2>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
             Configure active floor tables and toggle operational availability
           </span>
         </div>
 
         {/* Add Table form - responsive on mobile */}
-        <form onSubmit={handleAddTable} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: 'auto' }}>
+        <form onSubmit={handleAddTable} style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', width: 'auto' }}>
           <input
             type="text"
             placeholder="e.g. T13 or Garden-1"
             value={newTableNumber}
             onChange={(e) => setNewTableNumber(e.target.value)}
-            style={{ width: '150px' }}
+            style={{ width: '140px', minHeight: '30px', fontSize: '12px' }}
             required
           />
-          <button type="submit" className="btn-primary" style={{ padding: '0 12px' }}>
-            <Plus size={15} />
+          <button type="submit" className="btn-primary btn-sm" style={{ padding: '0 10px' }}>
             <span>Add Table</span>
           </button>
         </form>
       </div>
 
       {noticeMessage && (
-        <div className="alert-banner alert-banner-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="alert-banner alert-banner-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '6px 10px' }}>
           <span>{noticeMessage}</span>
-          <button type="button" className="btn-secondary btn-sm" onClick={() => setNoticeMessage('')} style={{ border: 'none' }}>
-            <X size={14} />
+          <button type="button" className="btn-secondary btn-sm" onClick={() => setNoticeMessage('')} style={{ border: 'none', padding: '1px 6px', fontSize: '11px' }}>
+            Dismiss
           </button>
         </div>
       )}
 
       {errorMessage && (
-        <div className="alert-banner alert-banner-danger">
-          <AlertCircle size={15} />
+        <div className="alert-banner alert-banner-danger" style={{ marginBottom: '10px', padding: '6px 10px' }}>
           <span>{errorMessage}</span>
         </div>
       )}

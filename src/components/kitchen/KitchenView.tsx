@@ -9,16 +9,7 @@ import {
   ParcelOrder, 
   KitchenPreparationGroup 
 } from '../../types/database';
-import { 
-  Volume2, 
-  VolumeX, 
-  Bell, 
-  CheckCheck, 
-  Clock, 
-  AlertCircle, 
-  ChefHat,
-  Package
-} from 'lucide-react';
+
 
 export const KitchenView: React.FC = () => {
   const { currentStaff } = useAuth();
@@ -117,29 +108,13 @@ export const KitchenView: React.FC = () => {
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       {/* Kitchen Control Header & Audio Status */}
-      <div className="panel" style={{ marginBottom: '16px', padding: '12px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
-              style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '6px',
-                backgroundColor: 'var(--accent-subtle)',
-                color: 'var(--accent)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ChefHat size={18} />
-            </div>
-            <div>
-              <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Kitchen Preparation Queue</h2>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                {prepGroups.length} pending dish group{prepGroups.length !== 1 ? 's' : ''} awaiting completion
-              </span>
-            </div>
+      <div className="panel" style={{ marginBottom: '12px', padding: '10px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <h2 style={{ fontSize: '15px', fontWeight: 700 }}>Kitchen Preparation Queue</h2>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              {prepGroups.length} pending dish group{prepGroups.length !== 1 ? 's' : ''} awaiting completion
+            </span>
           </div>
 
           {/* Sound Controls */}
@@ -151,7 +126,6 @@ export const KitchenView: React.FC = () => {
                 onClick={unlockAudio}
                 title="Browser requires one user interaction to enable order alert sounds"
               >
-                <Bell size={13} />
                 Enable Sound Alerts
               </button>
             ) : (
@@ -161,8 +135,7 @@ export const KitchenView: React.FC = () => {
                 onClick={() => setSoundEnabled(!soundEnabled)}
                 title={soundEnabled ? 'Mute Kitchen Alerts' : 'Unmute Kitchen Alerts'}
               >
-                {soundEnabled ? <Volume2 size={13} color="var(--success)" /> : <VolumeX size={13} />}
-                {soundEnabled ? 'Sound Enabled' : 'Muted'}
+                {soundEnabled ? 'Sound: On' : 'Sound: Muted'}
               </button>
             )}
 
@@ -180,7 +153,7 @@ export const KitchenView: React.FC = () => {
         {!audioUnlocked && (
           <div
             className="alert-banner alert-banner-warning"
-            style={{ marginTop: '10px', marginBottom: 0, padding: '6px 10px', fontSize: '12px' }}
+            style={{ marginTop: '8px', marginBottom: 0, padding: '6px 10px', fontSize: '12px' }}
           >
             <span>
               <strong>Audio Notice:</strong> Browser security requires you to click <strong>&quot;Enable Sound Alerts&quot;</strong> once so kitchen chimes can ring on new tickets.
@@ -190,8 +163,7 @@ export const KitchenView: React.FC = () => {
       </div>
 
       {errorMessage && (
-        <div className="alert-banner alert-banner-danger" style={{ marginBottom: '14px' }}>
-          <AlertCircle size={16} />
+        <div className="alert-banner alert-banner-danger" style={{ marginBottom: '12px', padding: '8px 12px' }}>
           <span>{errorMessage}</span>
         </div>
       )}
@@ -200,20 +172,19 @@ export const KitchenView: React.FC = () => {
       <div className="kitchen-queue-grid">
         {/* Column 1: Dine-In Table Groups */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
             <span style={{ fontWeight: 700, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Dine-In Tables ({tableGroups.length})
             </span>
           </div>
 
           {tableGroups.length === 0 ? (
-            <div className="panel" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              <CheckCheck size={28} style={{ margin: '0 auto 8px', color: 'var(--success)' }} />
-              <p style={{ fontWeight: 600 }}>All table food prepared</p>
+            <div className="panel" style={{ padding: '20px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <p style={{ fontWeight: 600, fontSize: '13px' }}>All table food prepared</p>
               <span style={{ fontSize: '12px' }}>No pending orders in dine-in queue</span>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {tableGroups.map((group) => {
                 const isMarking = markingGroupKey === group.group_key;
                 const elapsedMinutes = Math.floor((Date.now() - new Date(group.first_ordered_at).getTime()) / 60000);
@@ -224,18 +195,18 @@ export const KitchenView: React.FC = () => {
                     key={group.group_key}
                     className="panel"
                     style={{
-                      padding: '12px 14px',
-                      borderLeft: isUrgent ? '4px solid var(--danger)' : '4px solid var(--accent)',
+                      padding: '10px 12px',
+                      borderLeft: isUrgent ? '3px solid var(--danger)' : '3px solid var(--accent)',
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span
                           style={{
                             fontWeight: 800,
-                            fontSize: '15px',
+                            fontSize: '13px',
                             backgroundColor: 'var(--bg-surface-subtle)',
-                            padding: '2px 8px',
+                            padding: '2px 6px',
                             borderRadius: '4px',
                             border: '1px solid var(--border-strong)',
                           }}
@@ -243,16 +214,15 @@ export const KitchenView: React.FC = () => {
                           {group.table_number}
                         </span>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: '14px' }}>{group.dish_name}</div>
+                          <div style={{ fontWeight: 700, fontSize: '13px' }}>{group.dish_name}</div>
                           <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                             {group.category_name}
                           </div>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: isUrgent ? 'var(--danger)' : 'var(--text-muted)' }}>
-                        <Clock size={12} />
-                        <span>{elapsedMinutes}m ago</span>
+                      <div style={{ fontSize: '11px', color: isUrgent ? 'var(--danger)' : 'var(--text-muted)', fontWeight: 500 }}>
+                        {elapsedMinutes}m ago
                       </div>
                     </div>
 
@@ -262,22 +232,22 @@ export const KitchenView: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '8px 10px',
+                        padding: '6px 8px',
                         backgroundColor: 'var(--bg-surface-subtle)',
                         borderRadius: '4px',
-                        marginBottom: '10px',
+                        marginBottom: '8px',
                       }}
                     >
                       <div>
-                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Pending to Cook:</span>
-                        <span style={{ fontSize: '18px', fontWeight: 800, marginLeft: '6px', color: 'var(--accent)' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Pending:</span>
+                        <span style={{ fontSize: '16px', fontWeight: 800, marginLeft: '6px', color: 'var(--accent)' }}>
                           {group.pending_qty}
                         </span>
                       </div>
 
                       {group.total_prepared_qty > 0 && (
                         <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>
-                          ✓ {group.total_prepared_qty} already ready
+                          {group.total_prepared_qty} ready
                         </span>
                       )}
                     </div>
@@ -300,7 +270,6 @@ export const KitchenView: React.FC = () => {
                         disabled={isMarking}
                         onClick={() => handleMarkReady(group, group.pending_qty)}
                       >
-                        <CheckCheck size={13} />
                         {isMarking ? 'Updating...' : `Mark All ${group.pending_qty} Ready`}
                       </button>
                     </div>
@@ -313,20 +282,19 @@ export const KitchenView: React.FC = () => {
 
         {/* Column 2: Takeaway Parcels */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
             <span style={{ fontWeight: 700, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Takeaway Parcels ({parcelGroups.length})
             </span>
           </div>
 
           {parcelGroups.length === 0 ? (
-            <div className="panel" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              <Package size={28} style={{ margin: '0 auto 8px', color: 'var(--text-muted)', opacity: 0.5 }} />
-              <p style={{ fontWeight: 600 }}>No pending parcels</p>
+            <div className="panel" style={{ padding: '20px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <p style={{ fontWeight: 600, fontSize: '13px' }}>No pending parcels</p>
               <span style={{ fontSize: '12px' }}>Takeaway preparation queue is clear</span>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {parcelGroups.map((group) => {
                 const isMarking = markingGroupKey === group.group_key;
                 const elapsedMinutes = Math.floor((Date.now() - new Date(group.first_ordered_at).getTime()) / 60000);
@@ -336,19 +304,19 @@ export const KitchenView: React.FC = () => {
                     key={group.group_key}
                     className="panel"
                     style={{
-                      padding: '12px 14px',
-                      borderLeft: '4px solid #0284c7', // Blue parcel accent
+                      padding: '10px 12px',
+                      borderLeft: '3px solid #0284c7', // Blue parcel accent
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span
                           style={{
                             fontWeight: 700,
-                            fontSize: '13px',
+                            fontSize: '12px',
                             backgroundColor: '#e0f2fe',
                             color: '#0369a1',
-                            padding: '2px 8px',
+                            padding: '2px 6px',
                             borderRadius: '4px',
                             border: '1px solid #bae6fd',
                           }}
@@ -356,16 +324,15 @@ export const KitchenView: React.FC = () => {
                           {group.parcel_code}
                         </span>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: '14px' }}>{group.dish_name}</div>
+                          <div style={{ fontWeight: 700, fontSize: '13px' }}>{group.dish_name}</div>
                           <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                             {group.category_name}
                           </div>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-muted)' }}>
-                        <Clock size={12} />
-                        <span>{elapsedMinutes}m ago</span>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>
+                        {elapsedMinutes}m ago
                       </div>
                     </div>
 
@@ -374,22 +341,22 @@ export const KitchenView: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '8px 10px',
+                        padding: '6px 8px',
                         backgroundColor: 'var(--bg-surface-subtle)',
                         borderRadius: '4px',
-                        marginBottom: '10px',
+                        marginBottom: '8px',
                       }}
                     >
                       <div>
-                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Pending to Pack:</span>
-                        <span style={{ fontSize: '18px', fontWeight: 800, marginLeft: '6px', color: '#0369a1' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Pending:</span>
+                        <span style={{ fontSize: '16px', fontWeight: 800, marginLeft: '6px', color: '#0369a1' }}>
                           {group.pending_qty}
                         </span>
                       </div>
 
                       {group.total_prepared_qty > 0 && (
                         <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>
-                          ✓ {group.total_prepared_qty} ready
+                          {group.total_prepared_qty} ready
                         </span>
                       )}
                     </div>
@@ -411,7 +378,6 @@ export const KitchenView: React.FC = () => {
                         disabled={isMarking}
                         onClick={() => handleMarkReady(group, group.pending_qty)}
                       >
-                        <CheckCheck size={13} />
                         {isMarking ? 'Updating...' : `Mark All ${group.pending_qty} Ready`}
                       </button>
                     </div>

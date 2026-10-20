@@ -1,7 +1,7 @@
 import React from 'react';
 import { DiningTable, TableSession, ParcelOrder, Bill, OrderItem } from '../../types/database';
 import { formatPaiseToINR } from '../../lib/currency';
-import { Plus, Package, Clock, Receipt, Utensils } from 'lucide-react';
+
 
 interface SessionsOverviewProps {
   tables: DiningTable[];
@@ -32,31 +32,29 @@ export const SessionsOverview: React.FC<SessionsOverviewProps> = ({
       {/* Top action row */}
       <div className="sessions-header-row">
         <div>
-          <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Live Dining Sessions & Takeaway Parcels</h2>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            {activeTableSessions.length} active table{activeTableSessions.length !== 1 ? 's' : ''} &bull; {activeParcels.length} active parcel{activeParcels.length !== 1 ? 's' : ''}
+          <h2 style={{ fontSize: '15px', fontWeight: 700 }}>Live Dining Sessions & Takeaway Parcels</h2>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+            {activeTableSessions.length} active table{activeTableSessions.length !== 1 ? 's' : ''}, {activeParcels.length} active parcel{activeParcels.length !== 1 ? 's' : ''}
           </span>
         </div>
 
-        <button type="button" className="btn-primary" onClick={onCreateParcel} style={{ whiteSpace: 'nowrap' }}>
-          <Plus size={15} />
-          <span>Create Takeaway Parcel</span>
+        <button type="button" className="btn-primary btn-sm" onClick={onCreateParcel} style={{ whiteSpace: 'nowrap' }}>
+          Create Takeaway Parcel
         </button>
       </div>
 
       {/* Grid: Active Tables */}
-      <div style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-          <Utensils size={15} color="var(--vermilion, var(--accent))" />
-          <span style={{ fontWeight: 700, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+          <span style={{ fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
             Active Tables ({activeTableSessions.length})
           </span>
         </div>
 
         {activeTableSessions.length === 0 ? (
-          <div className="panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <p style={{ fontWeight: 500 }}>No active table sessions</p>
-            <span style={{ fontSize: '12px' }}>All tables are currently vacant</span>
+          <div className="panel" style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <p style={{ fontWeight: 500, fontSize: '13px' }}>No active table sessions</p>
+            <span style={{ fontSize: '11px' }}>All tables are currently vacant</span>
           </div>
         ) : (
           <div className="sessions-grid">
@@ -97,7 +95,6 @@ export const SessionsOverview: React.FC<SessionsOverviewProps> = ({
                   <div className="session-card-meta">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <span>Items: <strong style={{ color: 'var(--text-primary)' }}>{totalItems}</strong></span>
-                      <span className="session-card-divider">&bull;</span>
                       <span>
                         Kitchen: <strong style={{ color: readyItems >= totalItems && totalItems > 0 ? 'var(--emerald-green)' : 'var(--warning)' }}>
                           {readyItems}/{totalItems} ready
@@ -105,9 +102,8 @@ export const SessionsOverview: React.FC<SessionsOverviewProps> = ({
                       </span>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '11px' }}>
-                      <Clock size={11} />
-                      <span>{elapsedMins}m ago</span>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      {elapsedMins}m ago
                     </div>
                   </div>
 
@@ -121,9 +117,8 @@ export const SessionsOverview: React.FC<SessionsOverviewProps> = ({
                         type="button"
                         className="btn-secondary btn-sm"
                         onClick={() => onOpenBill(bill, tableNumber)}
-                        style={{ padding: '3px 10px', minHeight: '28px', fontSize: '11.5px', fontWeight: 600, whiteSpace: 'nowrap' }}
+                        style={{ padding: '3px 10px', minHeight: '26px', fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap' }}
                       >
-                        <Receipt size={13} />
                         <span>View / Settle</span>
                       </button>
                     )}
@@ -137,17 +132,16 @@ export const SessionsOverview: React.FC<SessionsOverviewProps> = ({
 
       {/* Grid: Active Parcels */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-          <Package size={15} color="var(--emerald-green)" />
-          <span style={{ fontWeight: 700, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+          <span style={{ fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
             Active Takeaway Parcels ({activeParcels.length})
           </span>
         </div>
 
         {activeParcels.length === 0 ? (
-          <div className="panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <p style={{ fontWeight: 500 }}>No active parcel orders</p>
-            <span style={{ fontSize: '12px' }}>Use &quot;Create Takeaway Parcel&quot; above to place new takeaway orders</span>
+          <div className="panel" style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <p style={{ fontWeight: 500, fontSize: '13px' }}>No active parcel orders</p>
+            <span style={{ fontSize: '11px' }}>Use &quot;Create Takeaway Parcel&quot; above to place new takeaway orders</span>
           </div>
         ) : (
           <div className="sessions-grid">
@@ -188,7 +182,6 @@ export const SessionsOverview: React.FC<SessionsOverviewProps> = ({
                   <div className="session-card-meta">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <span>Items: <strong>{totalItems}</strong></span>
-                      <span className="session-card-divider">&bull;</span>
                       <span>
                         Kitchen: <strong style={{ color: readyItems >= totalItems && totalItems > 0 ? 'var(--emerald-green)' : 'var(--warning)' }}>
                           {readyItems}/{totalItems} ready
@@ -196,9 +189,8 @@ export const SessionsOverview: React.FC<SessionsOverviewProps> = ({
                       </span>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '11px' }}>
-                      <Clock size={11} />
-                      <span>{elapsedMins}m ago</span>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      {elapsedMins}m ago
                     </div>
                   </div>
 
@@ -211,9 +203,8 @@ export const SessionsOverview: React.FC<SessionsOverviewProps> = ({
                         type="button"
                         className="btn-secondary btn-sm"
                         onClick={() => onOpenBill(bill, parcel.parcel_code)}
-                        style={{ padding: '3px 10px', minHeight: '28px', fontSize: '11.5px', fontWeight: 600, whiteSpace: 'nowrap' }}
+                        style={{ padding: '3px 10px', minHeight: '26px', fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap' }}
                       >
-                        <Receipt size={13} />
                         <span>Collect & Settle</span>
                       </button>
                     )}

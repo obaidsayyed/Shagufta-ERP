@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import { api } from '../../lib/api';
 import { MenuItem, MenuCategory } from '../../types/database';
 import { formatPaiseToINR, rupeesToPaise, paiseToRupees } from '../../lib/currency';
-import { Plus, Edit2, Archive, RotateCcw, Trash2, Check, X, AlertCircle, Upload, FileSpreadsheet, Download, CheckCircle2 } from 'lucide-react';
+
 
 interface MenuManagementViewProps {
   menuItems: MenuItem[];
@@ -353,42 +353,38 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
 
   return (
     <div>
-      <div className="responsive-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+      <div className="responsive-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
         <div>
-          <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Menu & Category Management</h2>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          <h2 style={{ fontSize: '15px', fontWeight: 700 }}>Menu & Category Management</h2>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
             Configure dishes, prices, availability and operational food categories
           </span>
         </div>
 
-        <div className="responsive-btn-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button type="button" className="btn-secondary" onClick={() => setShowImportModal(true)}>
-            <Upload size={14} />
+        <div className="responsive-btn-group" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          <button type="button" className="btn-secondary btn-sm" onClick={() => setShowImportModal(true)}>
             Add via File (CSV / Excel)
           </button>
-          <button type="button" className="btn-secondary" onClick={() => setShowAddCategoryModal(true)}>
-            <Plus size={14} />
+          <button type="button" className="btn-secondary btn-sm" onClick={() => setShowAddCategoryModal(true)}>
             Add Category
           </button>
-          <button type="button" className="btn-primary" onClick={() => setShowAddDishModal(true)}>
-            <Plus size={14} />
+          <button type="button" className="btn-primary btn-sm" onClick={() => setShowAddDishModal(true)}>
             Add New Dish
           </button>
         </div>
       </div>
 
       {noticeMessage && (
-        <div className="alert-banner alert-banner-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="alert-banner alert-banner-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '6px 10px' }}>
           <span>{noticeMessage}</span>
-          <button type="button" className="btn-secondary btn-sm" onClick={() => setNoticeMessage('')} style={{ border: 'none' }}>
-            <X size={14} />
+          <button type="button" className="btn-secondary btn-sm" onClick={() => setNoticeMessage('')} style={{ border: 'none', padding: '1px 6px', fontSize: '11px' }}>
+            Dismiss
           </button>
         </div>
       )}
 
       {errorMessage && (
-        <div className="alert-banner alert-banner-danger">
-          <AlertCircle size={15} />
+        <div className="alert-banner alert-banner-danger" style={{ marginBottom: '10px', padding: '6px 10px' }}>
           <span>{errorMessage}</span>
         </div>
       )}
@@ -466,31 +462,31 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                     <button
                       type="button"
                       className="btn-secondary btn-sm"
-                      style={{ padding: '4px' }}
+                      style={{ padding: '2px 6px', fontSize: '11px' }}
                       onClick={() => setEditingItem(dish)}
                       title="Edit dish name or price"
                     >
-                      <Edit2 size={13} />
+                      Edit
                     </button>
 
                     <button
                       type="button"
                       className="btn-secondary btn-sm"
-                      style={{ padding: '4px' }}
+                      style={{ padding: '2px 6px', fontSize: '11px' }}
                       onClick={() => handleToggleArchive(dish)}
                       title={dish.is_archived ? 'Restore to active menu' : 'Archive dish'}
                     >
-                      {dish.is_archived ? <RotateCcw size={13} color="var(--success)" /> : <Archive size={13} />}
+                      {dish.is_archived ? 'Restore' : 'Archive'}
                     </button>
 
                     <button
                       type="button"
                       className="btn-danger btn-sm"
-                      style={{ padding: '4px' }}
+                      style={{ padding: '2px 6px', fontSize: '11px' }}
                       onClick={() => handleSafeDelete(dish)}
                       title="Safely remove or archive dish"
                     >
-                      <Trash2 size={13} />
+                      Delete
                     </button>
                   </div>
                 </td>
@@ -501,37 +497,38 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
       </div>
 
       {/* Modal: Add Dish */}
+      {/* Modal: Add Dish */}
       {showAddDishModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '440px' }}>
+          <div className="modal-content" style={{ maxWidth: '420px' }}>
             <div className="modal-header">
-              <h3>Add New Menu Dish</h3>
-              <button type="button" className="btn-secondary btn-sm" onClick={() => setShowAddDishModal(false)} style={{ border: 'none' }}>
-                <X size={15} />
+              <h3 style={{ fontSize: '15px' }}>Add New Menu Dish</h3>
+              <button type="button" className="btn-secondary btn-sm" onClick={() => setShowAddDishModal(false)} style={{ padding: '2px 8px', fontSize: '11px' }}>
+                Close
               </button>
             </div>
             <form onSubmit={handleCreateDish}>
-              <div className="modal-body">
-                <div style={{ marginBottom: '12px' }}>
-                  <label htmlFor="dish-name-input">Dish Name</label>
+              <div className="modal-body" style={{ padding: '12px 14px' }}>
+                <div style={{ marginBottom: '10px' }}>
+                  <label htmlFor="dish-name-input" style={{ fontSize: '12px', fontWeight: 600 }}>Dish Name</label>
                   <input
                     id="dish-name-input"
                     type="text"
                     placeholder="e.g. Garlic Naan"
                     value={newDishName}
                     onChange={(e) => setNewDishName(e.target.value)}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
                     required
                   />
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label htmlFor="dish-category-select">Category</label>
+                <div style={{ marginBottom: '10px' }}>
+                  <label htmlFor="dish-category-select" style={{ fontSize: '12px', fontWeight: 600 }}>Category</label>
                   <select
                     id="dish-category-select"
                     value={newDishCategoryId}
                     onChange={(e) => setNewDishCategoryId(e.target.value)}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
                     required
                   >
                     {categories.map((c) => (
@@ -540,8 +537,8 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label htmlFor="dish-price-input">Price in Rupees (₹)</label>
+                <div style={{ marginBottom: '10px' }}>
+                  <label htmlFor="dish-price-input" style={{ fontSize: '12px', fontWeight: 600 }}>Price in Rupees</label>
                   <input
                     id="dish-price-input"
                     type="number"
@@ -550,17 +547,17 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                     placeholder="e.g. 60"
                     value={newDishPriceRupees}
                     onChange={(e) => setNewDishPriceRupees(e.target.value)}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
                     required
                   />
                 </div>
               </div>
 
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowAddDishModal(false)}>
+              <div className="modal-footer" style={{ padding: '8px 14px' }}>
+                <button type="button" className="btn-secondary btn-sm" onClick={() => setShowAddDishModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="btn-primary btn-sm">
                   Save Dish
                 </button>
               </div>
@@ -572,34 +569,34 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
       {/* Modal: Edit Dish */}
       {editingItem && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '440px' }}>
+          <div className="modal-content" style={{ maxWidth: '420px' }}>
             <div className="modal-header">
-              <h3>Edit Dish: {editingItem.name}</h3>
-              <button type="button" className="btn-secondary btn-sm" onClick={() => setEditingItem(null)} style={{ border: 'none' }}>
-                <X size={15} />
+              <h3 style={{ fontSize: '15px' }}>Edit Dish: {editingItem.name}</h3>
+              <button type="button" className="btn-secondary btn-sm" onClick={() => setEditingItem(null)} style={{ padding: '2px 8px', fontSize: '11px' }}>
+                Close
               </button>
             </div>
             <form onSubmit={handleUpdateDish}>
-              <div className="modal-body">
-                <div style={{ marginBottom: '12px' }}>
-                  <label htmlFor="edit-dish-name">Dish Name</label>
+              <div className="modal-body" style={{ padding: '12px 14px' }}>
+                <div style={{ marginBottom: '10px' }}>
+                  <label htmlFor="edit-dish-name" style={{ fontSize: '12px', fontWeight: 600 }}>Dish Name</label>
                   <input
                     id="edit-dish-name"
                     type="text"
                     value={editingItem.name}
                     onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
                     required
                   />
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label htmlFor="edit-dish-cat">Category</label>
+                <div style={{ marginBottom: '10px' }}>
+                  <label htmlFor="edit-dish-cat" style={{ fontSize: '12px', fontWeight: 600 }}>Category</label>
                   <select
                     id="edit-dish-cat"
                     value={editingItem.category_id}
                     onChange={(e) => setEditingItem({ ...editingItem, category_id: e.target.value })}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -607,8 +604,8 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label htmlFor="edit-dish-price">Price in Rupees (₹)</label>
+                <div style={{ marginBottom: '10px' }}>
+                  <label htmlFor="edit-dish-price" style={{ fontSize: '12px', fontWeight: 600 }}>Price in Rupees</label>
                   <input
                     id="edit-dish-price"
                     type="number"
@@ -616,20 +613,20 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                     step="0.5"
                     value={paiseToRupees(editingItem.price_paise)}
                     onChange={(e) => setEditingItem({ ...editingItem, price_paise: rupeesToPaise(e.target.value) })}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
                     required
                   />
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    Notice: Price changes take effect for future orders only. Historical bills preserve their snapshot prices.
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                    Notice: Price changes take effect for future orders only.
                   </span>
                 </div>
               </div>
 
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setEditingItem(null)}>
+              <div className="modal-footer" style={{ padding: '8px 14px' }}>
+                <button type="button" className="btn-secondary btn-sm" onClick={() => setEditingItem(null)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="btn-primary btn-sm">
                   Save Changes
                 </button>
               </div>
@@ -641,33 +638,33 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
       {/* Modal: Add Category */}
       {showAddCategoryModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '400px' }}>
+          <div className="modal-content" style={{ maxWidth: '380px' }}>
             <div className="modal-header">
-              <h3>Create Food Category</h3>
-              <button type="button" className="btn-secondary btn-sm" onClick={() => setShowAddCategoryModal(false)} style={{ border: 'none' }}>
-                <X size={15} />
+              <h3 style={{ fontSize: '15px' }}>Create Food Category</h3>
+              <button type="button" className="btn-secondary btn-sm" onClick={() => setShowAddCategoryModal(false)} style={{ padding: '2px 8px', fontSize: '11px' }}>
+                Close
               </button>
             </div>
             <form onSubmit={handleCreateCategory}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ padding: '12px 14px' }}>
                 <div>
-                  <label htmlFor="cat-name-input">Category Name</label>
+                  <label htmlFor="cat-name-input" style={{ fontSize: '12px', fontWeight: 600 }}>Category Name</label>
                   <input
                     id="cat-name-input"
                     type="text"
                     placeholder="e.g. Tandoor Specials"
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
                     required
                   />
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowAddCategoryModal(false)}>
+              <div className="modal-footer" style={{ padding: '8px 14px' }}>
+                <button type="button" className="btn-secondary btn-sm" onClick={() => setShowAddCategoryModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="btn-primary btn-sm">
                   Create Category
                 </button>
               </div>
@@ -677,18 +674,16 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
       )}
 
       {/* Modal: Add Menu Items via File (CSV / Excel) */}
+      {/* Modal: Add Menu Items via File (CSV / Excel) */}
       {showImportModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '640px', width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+          <div className="modal-content" style={{ maxWidth: '580px', width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileSpreadsheet size={18} color="var(--emerald-green)" />
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '16px' }}>Import Menu Items via File</h3>
-                  <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                    Upload CSV or Excel (.xlsx, .xls) with 3 columns: name, category, and price
-                  </span>
-                </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '15px' }}>Import Menu Items via File</h3>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  Upload CSV or Excel (.xlsx, .xls) with 3 columns: name, category, and price
+                </span>
               </div>
               <button
                 type="button"
@@ -697,41 +692,40 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                   setShowImportModal(false);
                   resetImportState();
                 }}
-                style={{ border: 'none' }}
+                style={{ padding: '2px 8px', fontSize: '11px' }}
               >
-                <X size={15} />
+                Close
               </button>
             </div>
 
-            <div className="modal-body" style={{ overflowY: 'auto', flex: 1, padding: '16px 20px' }}>
+            <div className="modal-body" style={{ overflowY: 'auto', flex: 1, padding: '12px 14px' }}>
               {/* Instructions & Sample Download */}
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: '10px 14px',
-                  borderRadius: '8px',
+                  padding: '8px 10px',
+                  borderRadius: '6px',
                   backgroundColor: 'var(--bg-surface-elevated)',
                   border: '1px solid var(--border-subtle)',
-                  marginBottom: '14px',
+                  marginBottom: '10px',
                   flexWrap: 'wrap',
-                  gap: '8px',
+                  gap: '6px',
                 }}
               >
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  <strong>Required Columns:</strong> <code style={{ backgroundColor: 'var(--bg-surface)', padding: '2px 5px', borderRadius: '4px' }}>name</code>,{' '}
-                  <code style={{ backgroundColor: 'var(--bg-surface)', padding: '2px 5px', borderRadius: '4px' }}>category</code>,{' '}
-                  <code style={{ backgroundColor: 'var(--bg-surface)', padding: '2px 5px', borderRadius: '4px' }}>price</code> (order doesn't matter)
+                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                  <strong>Required Columns:</strong> <code style={{ backgroundColor: 'var(--bg-surface)', padding: '1px 4px', borderRadius: '3px' }}>name</code>,{' '}
+                  <code style={{ backgroundColor: 'var(--bg-surface)', padding: '1px 4px', borderRadius: '3px' }}>category</code>,{' '}
+                  <code style={{ backgroundColor: 'var(--bg-surface)', padding: '1px 4px', borderRadius: '3px' }}>price</code>
                 </div>
                 <button
                   type="button"
                   className="btn-secondary btn-sm"
                   onClick={handleDownloadSample}
-                  style={{ fontSize: '11.5px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                  style={{ fontSize: '11px' }}
                 >
-                  <Download size={13} />
-                  <span>Download Sample CSV</span>
+                  Download Sample CSV
                 </button>
               </div>
 
@@ -740,14 +734,14 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 style={{
                   border: '2px dashed var(--border-strong)',
-                  borderRadius: '10px',
-                  padding: '24px 16px',
+                  borderRadius: '6px',
+                  padding: '14px 12px',
                   textAlign: 'center',
                   cursor: 'pointer',
                   backgroundColor: importFile ? 'rgba(4, 106, 56, 0.04)' : 'var(--bg-surface)',
                   borderColor: importFile ? 'var(--emerald-green)' : 'var(--border-strong)',
                   transition: 'all 0.2s ease',
-                  marginBottom: '16px',
+                  marginBottom: '12px',
                 }}
               >
                 <input
@@ -757,19 +751,18 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                   style={{ display: 'none' }}
                   onChange={handleFileChange}
                 />
-                <Upload size={28} style={{ margin: '0 auto 8px', color: importFile ? 'var(--emerald-green)' : 'var(--text-muted)' }} />
                 {importFile ? (
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--emerald-green)' }}>
+                    <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--emerald-green)' }}>
                       {importFile.name}
                     </div>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      {(importFile.size / 1024).toFixed(1)} KB &bull; Click to choose another file
+                      {(importFile.size / 1024).toFixed(1)} KB, Click to choose another file
                     </span>
                   </div>
                 ) : (
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>
+                    <div style={{ fontWeight: 600, fontSize: '12.5px', color: 'var(--text-primary)' }}>
                       Click to choose CSV or Excel file
                     </div>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
@@ -781,12 +774,11 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
 
               {/* Error messages if any */}
               {importErrors.length > 0 && (
-                <div className="alert-banner alert-banner-danger" style={{ marginBottom: '14px', display: 'block' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', fontWeight: 700 }}>
-                    <AlertCircle size={15} />
-                    <span>File Issues Detected</span>
+                <div className="alert-banner alert-banner-danger" style={{ marginBottom: '10px', display: 'block', padding: '8px 10px' }}>
+                  <div style={{ marginBottom: '3px', fontWeight: 700, fontSize: '12px' }}>
+                    File Issues Detected
                   </div>
-                  <ul style={{ margin: '4px 0 0 18px', padding: 0, fontSize: '11.5px', lineHeight: 1.5 }}>
+                  <ul style={{ margin: '3px 0 0 16px', padding: 0, fontSize: '11px', lineHeight: 1.4 }}>
                     {importErrors.map((err, idx) => (
                       <li key={idx}>{err}</li>
                     ))}
@@ -802,18 +794,17 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: '8px',
+                      marginBottom: '6px',
                       flexWrap: 'wrap',
-                      gap: '6px',
+                      gap: '4px',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <CheckCircle2 size={16} color="var(--emerald-green)" />
-                      <span style={{ fontWeight: 700, fontSize: '13px' }}>
+                    <div>
+                      <span style={{ fontWeight: 700, fontSize: '12.5px' }}>
                         Ready to Import ({parsedItems.length} dishes)
                       </span>
                     </div>
-                    <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       Categories: {Array.from(new Set(parsedItems.map((i) => i.category))).join(', ')}
                     </span>
                   </div>
@@ -821,18 +812,18 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                   <div
                     className="table-responsive"
                     style={{
-                      maxHeight: '220px',
+                      maxHeight: '180px',
                       overflowY: 'auto',
                       overflowX: 'auto',
                       border: '1px solid var(--border-subtle)',
-                      borderRadius: '8px',
+                      borderRadius: '6px',
                       backgroundColor: 'var(--bg-surface)',
                     }}
                   >
-                    <table style={{ margin: 0, fontSize: '12px' }}>
+                    <table style={{ margin: 0, fontSize: '11.5px' }}>
                       <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-surface-elevated)' }}>
                         <tr>
-                          <th style={{ width: '40px', textAlign: 'center' }}>#</th>
+                          <th style={{ width: '36px', textAlign: 'center' }}>No.</th>
                           <th>Dish Name</th>
                           <th>Category</th>
                           <th style={{ textAlign: 'right' }}>Price</th>
@@ -841,10 +832,10 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
                       <tbody>
                         {parsedItems.map((item, idx) => (
                           <tr key={idx}>
-                            <td style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px' }}>{idx + 1}</td>
+                            <td style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '10.5px' }}>{idx + 1}</td>
                             <td style={{ fontWeight: 600 }}>{item.name}</td>
                             <td>
-                              <span className="badge badge-settled" style={{ fontSize: '10px' }}>
+                              <span className="badge badge-settled" style={{ fontSize: '9.5px' }}>
                                 {item.category}
                               </span>
                             </td>
@@ -860,10 +851,10 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
               )}
             </div>
 
-            <div className="modal-footer" style={{ borderTop: '1px solid var(--border-subtle)', padding: '12px 20px' }}>
+            <div className="modal-footer" style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 14px' }}>
               <button
                 type="button"
-                className="btn-secondary"
+                className="btn-secondary btn-sm"
                 onClick={() => {
                   setShowImportModal(false);
                   resetImportState();
@@ -874,10 +865,10 @@ export const MenuManagementView: React.FC<MenuManagementViewProps> = ({
               </button>
               <button
                 type="button"
-                className="btn-primary"
+                className="btn-primary btn-sm"
                 onClick={handleExecuteImport}
                 disabled={parsedItems.length === 0 || isImporting}
-                style={{ minWidth: '160px' }}
+                style={{ minWidth: '130px' }}
               >
                 {isImporting ? 'Importing Dishes...' : `Import ${parsedItems.length} Dishes`}
               </button>

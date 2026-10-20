@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import { Bill, PaymentMethod } from '../../types/database';
 import { formatPaiseToINR, paiseToRupees } from '../../lib/currency';
-import { CheckCircle2, Banknote, Smartphone, X, AlertCircle, ArrowRightLeft } from 'lucide-react';
+
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -71,21 +71,17 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '440px' }}>
+      <div className="modal-content" style={{ maxWidth: '420px' }}>
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CheckCircle2 size={18} color="var(--success)" />
-            <h3>Settle Bill — {identifierTitle}</h3>
-          </div>
-          <button type="button" className="btn-secondary btn-sm" onClick={onClose} style={{ border: 'none', padding: '4px' }}>
-            <X size={16} />
+          <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Settle Bill: {identifierTitle}</h3>
+          <button type="button" className="btn-secondary btn-sm" onClick={onClose} style={{ padding: '2px 8px', fontSize: '11px' }}>
+            Close
           </button>
         </div>
 
-        <div className="modal-body">
+        <div className="modal-body" style={{ padding: '12px 14px' }}>
           {errorMessage && (
-            <div className="alert-banner alert-banner-danger" style={{ marginBottom: '12px' }}>
-              <AlertCircle size={15} />
+            <div className="alert-banner alert-banner-danger" style={{ marginBottom: '10px', padding: '6px 10px' }}>
               <span>{errorMessage}</span>
             </div>
           )}
@@ -95,56 +91,54 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
             style={{
               textAlign: 'center',
               backgroundColor: 'var(--bg-surface-subtle)',
-              padding: '16px',
+              padding: '10px 12px',
               borderRadius: '6px',
-              marginBottom: '16px',
+              marginBottom: '12px',
               border: '1px solid var(--border-subtle)',
             }}
           >
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Authoritative Amount Due
             </span>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>
+            <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '2px' }}>
               {formatPaiseToINR(bill.final_total_paise)}
             </div>
             {bill.adjustments_paise !== 0 && (
-              <span style={{ fontSize: '11px', color: 'var(--danger)', display: 'block', marginTop: '2px' }}>
+              <span style={{ fontSize: '10.5px', color: 'var(--danger)', display: 'block', marginTop: '2px' }}>
                 Includes {formatPaiseToINR(bill.adjustments_paise)} in authorized deductions
               </span>
             )}
           </div>
 
           {/* Payment Method Selector */}
-          <label style={{ marginBottom: '8px' }}>Select Recorded Payment Method</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+          <label style={{ marginBottom: '6px', fontSize: '11.5px', fontWeight: 600, display: 'block' }}>Payment Method</label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
             <button
               type="button"
-              className={paymentMethod === 'cash' ? 'btn-primary' : 'btn-secondary'}
+              className={paymentMethod === 'cash' ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}
               style={{
-                flexDirection: 'column',
-                minHeight: '64px',
-                padding: '8px',
-                gap: '4px',
+                minHeight: '34px',
+                padding: '6px 10px',
+                fontSize: '12px',
+                fontWeight: 600,
               }}
               onClick={() => setPaymentMethod('cash')}
             >
-              <Banknote size={20} />
-              <span style={{ fontWeight: 600 }}>Cash Payment</span>
+              Cash Payment
             </button>
 
             <button
               type="button"
-              className={paymentMethod === 'online' ? 'btn-primary' : 'btn-secondary'}
+              className={paymentMethod === 'online' ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}
               style={{
-                flexDirection: 'column',
-                minHeight: '64px',
-                padding: '8px',
-                gap: '4px',
+                minHeight: '34px',
+                padding: '6px 10px',
+                fontSize: '12px',
+                fontWeight: 600,
               }}
               onClick={() => setPaymentMethod('online')}
             >
-              <Smartphone size={20} />
-              <span style={{ fontWeight: 600 }}>Online (UPI/Card)</span>
+              Online (UPI/Card)
             </button>
           </div>
 
@@ -154,25 +148,21 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
               style={{
                 backgroundColor: 'var(--bg-surface-elevated)',
                 border: '1px solid var(--border-strong)',
-                borderRadius: '8px',
-                padding: '14px',
-                marginBottom: '16px',
+                borderRadius: '6px',
+                padding: '10px 12px',
+                marginBottom: '12px',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <label
                   htmlFor="cash-tendered-input"
                   style={{
-                    fontSize: '12px',
+                    fontSize: '11.5px',
                     fontWeight: 600,
                     color: 'var(--text-secondary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
                     margin: 0,
                   }}
                 >
-                  <Banknote size={15} color="var(--secondary-accent)" />
                   Cash Received from Customer
                 </label>
                 {cashReceived && (
@@ -184,7 +174,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                       border: 'none',
                       color: 'var(--text-muted)',
                       fontSize: '11px',
-                      padding: '2px 4px',
+                      padding: '1px 4px',
                       minHeight: 'auto',
                       cursor: 'pointer',
                       textDecoration: 'underline',
@@ -195,27 +185,14 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                 )}
               </div>
 
-              {/* Input Box with Rupee Symbol */}
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <span
-                  style={{
-                    position: 'absolute',
-                    left: '12px',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    color: 'var(--text-muted)',
-                    pointerEvents: 'none',
-                    userSelect: 'none',
-                  }}
-                >
-                  ₹
-                </span>
+              {/* Input Box */}
+              <div>
                 <input
                   id="cash-tendered-input"
                   type="number"
                   step="any"
                   min="0"
-                  placeholder={`e.g. ${paiseToRupees(bill.final_total_paise)}`}
+                  placeholder={`Amount (e.g. ${paiseToRupees(bill.final_total_paise)})`}
                   value={cashReceived}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -225,11 +202,11 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                   }}
                   style={{
                     width: '100%',
-                    paddingLeft: '28px',
-                    paddingRight: '12px',
-                    fontSize: '16px',
+                    paddingLeft: '10px',
+                    paddingRight: '10px',
+                    fontSize: '14px',
                     fontWeight: 600,
-                    height: '42px',
+                    height: '36px',
                     backgroundColor: 'var(--bg-surface)',
                     color: 'var(--text-primary)',
                     border: isInsufficient
@@ -237,20 +214,20 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                       : isCashEntered && changePaise >= 0
                       ? '1px solid var(--success-border)'
                       : '1px solid var(--border-strong)',
-                    borderRadius: '6px',
+                    borderRadius: '5px',
                   }}
                   autoFocus
                 />
               </div>
 
               {/* Quick Presets (Exact + round notes) */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '6px' }}>
                 <button
                   type="button"
-                  className="btn-secondary"
+                  className="btn-secondary btn-sm"
                   style={{
-                    padding: '4px 10px',
-                    minHeight: '28px',
+                    padding: '3px 8px',
+                    minHeight: '24px',
                     fontSize: '11px',
                     fontWeight: 600,
                     borderRadius: '4px',
@@ -263,17 +240,17 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                   <button
                     key={note}
                     type="button"
-                    className="btn-secondary"
+                    className="btn-secondary btn-sm"
                     style={{
-                      padding: '4px 10px',
-                      minHeight: '28px',
+                      padding: '3px 8px',
+                      minHeight: '24px',
                       fontSize: '11px',
                       fontWeight: 600,
                       borderRadius: '4px',
                     }}
                     onClick={() => setCashReceived(note.toString())}
                   >
-                    ₹{note}
+                    {formatPaiseToINR(note * 100, false)}
                   </button>
                 ))}
               </div>
@@ -283,11 +260,11 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                 changePaise > 0 ? (
                   <div
                     style={{
-                      marginTop: '12px',
-                      padding: '12px 14px',
+                      marginTop: '10px',
+                      padding: '10px 12px',
                       backgroundColor: 'rgba(4, 106, 56, 0.12)',
                       border: '1px solid var(--emerald-green)',
-                      borderRadius: '6px',
+                      borderRadius: '5px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -296,7 +273,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                     <div>
                       <span
                         style={{
-                          fontSize: '11px',
+                          fontSize: '10.5px',
                           fontWeight: 700,
                           color: 'var(--emerald-green)',
                           textTransform: 'uppercase',
@@ -306,11 +283,11 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                       >
                         Exact Change to Return
                       </span>
-                      <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--emerald-green)', lineHeight: 1.2, marginTop: '2px' }}>
+                      <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--emerald-green)', lineHeight: 1.2, marginTop: '2px' }}>
                         {formatPaiseToINR(changePaise)}
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right', fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                    <div style={{ textAlign: 'right', fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.3 }}>
                       <div>Given: <strong style={{ color: 'var(--text-primary)' }}>{formatPaiseToINR(cashReceivedPaise)}</strong></div>
                       <div>Due: <span style={{ color: 'var(--text-muted)' }}>{formatPaiseToINR(bill.final_total_paise)}</span></div>
                     </div>
@@ -318,42 +295,36 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                 ) : changePaise === 0 ? (
                   <div
                     style={{
-                      marginTop: '12px',
-                      padding: '10px 14px',
+                      marginTop: '10px',
+                      padding: '8px 12px',
                       backgroundColor: 'rgba(4, 106, 56, 0.08)',
                       border: '1px solid var(--emerald-green)',
-                      borderRadius: '6px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
+                      borderRadius: '5px',
                     }}
                   >
-                    <div>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--emerald-green)', textTransform: 'uppercase' }}>
-                        Exact Cash Tendered
-                      </span>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--emerald-green)', marginTop: '2px' }}>
-                        No Change Due (₹0.00)
-                      </div>
+                    <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--emerald-green)', textTransform: 'uppercase' }}>
+                      Exact Cash Tendered
+                    </span>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--emerald-green)', marginTop: '1px' }}>
+                      No Change Due
                     </div>
-                    <CheckCircle2 size={22} color="var(--emerald-green)" />
                   </div>
                 ) : (
                   <div
                     style={{
-                      marginTop: '12px',
-                      padding: '10px 14px',
+                      marginTop: '10px',
+                      padding: '8px 12px',
                       backgroundColor: 'rgba(227, 66, 34, 0.12)',
                       border: '1px solid var(--vermilion)',
-                      borderRadius: '6px',
+                      borderRadius: '5px',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
-                        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--vermilion)', textTransform: 'uppercase' }}>
+                        <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--vermilion)', textTransform: 'uppercase' }}>
                           Insufficient Amount Tendered
                         </span>
-                        <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--vermilion)', marginTop: '2px' }}>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--vermilion)', marginTop: '1px' }}>
                           Short by {formatPaiseToINR(Math.abs(changePaise))}
                         </div>
                       </div>
@@ -361,7 +332,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
                         Given: {formatPaiseToINR(cashReceivedPaise)}
                       </span>
                     </div>
-                    <div style={{ fontSize: '11px', color: '#C73517', marginTop: '4px' }}>
+                    <div style={{ fontSize: '11px', color: '#C73517', marginTop: '3px' }}>
                       Customer still needs to pay {formatPaiseToINR(Math.abs(changePaise))} more to settle this bill.
                     </div>
                   </div>
@@ -369,34 +340,30 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
               ) : (
                 <div
                   style={{
-                    marginTop: '10px',
+                    marginTop: '8px',
                     fontSize: '11px',
                     color: 'var(--text-muted)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
                   }}
                 >
-                  <ArrowRightLeft size={13} />
-                  <span>Enter amount given above to compute the exact change to return</span>
+                  <span>Enter amount given above to compute exact change to return</span>
                 </div>
               )}
             </div>
           )}
 
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-            Notice: Confirming settlement marks this session closed and records collection under <strong>{paymentMethod.toUpperCase()}</strong>. Future orders for this table will begin a fresh session.
+          <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.3, marginBottom: 0 }}>
+            Notice: Confirming settlement marks this session closed and records collection under <strong>{paymentMethod.toUpperCase()}</strong>.
           </p>
         </div>
 
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={isSubmitting}>
+        <div className="modal-footer" style={{ padding: '8px 14px' }}>
+          <button type="button" className="btn-secondary btn-sm" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </button>
           <button
             type="button"
-            className="btn-primary"
-            style={{ backgroundColor: 'var(--primary-action)', borderColor: 'var(--primary-action)', color: '#FFFFFF', fontWeight: 700 }}
+            className="btn-primary btn-sm"
+            style={{ backgroundColor: 'var(--primary-action)', borderColor: 'var(--primary-action)', color: '#FFFFFF', fontWeight: 700, minHeight: '32px' }}
             onClick={handleSettle}
             disabled={isSubmitting || (paymentMethod === 'cash' && isInsufficient)}
           >

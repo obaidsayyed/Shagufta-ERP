@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Shield, User, LogOut, PanelLeft, PanelLeftClose } from 'lucide-react';
 
 interface NavbarProps {
   isSidebarOpen: boolean;
@@ -17,7 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="app-header">
-      <div className="header-brand-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="header-brand-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         {/* Sidebar Toggle Button: Visible strictly for Admin */}
         {role === 'admin' && (
           <button
@@ -25,43 +24,32 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={onToggleSidebar}
             title={isSidebarOpen ? 'Collapse Navigation Sidebar' : 'Expand Navigation Sidebar'}
             className="btn-secondary btn-sm"
-            style={{ padding: '6px', minHeight: '32px', width: '32px' }}
+            style={{ padding: '4px 8px', minHeight: '28px', fontSize: '11px', fontWeight: 600 }}
           >
-            {isSidebarOpen ? <PanelLeftClose size={17} /> : <PanelLeft size={17} />}
+            {isSidebarOpen ? 'Close Menu' : 'Menu'}
           </button>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: 'var(--primary-action)' }} />
-          <span style={{ fontWeight: 800, fontSize: '15px', letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
-            HOTEL ERP
-          </span>
-        </div>
+        <span style={{ fontWeight: 800, fontSize: '14.5px', letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
+          HOTEL ERP
+        </span>
       </div>
 
       {/* Current Staff Badge & Logout */}
       {currentStaff && (
-        <div className="header-user-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        <div className="header-user-group" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           <button
             type="button"
             className="btn-secondary btn-sm"
             onClick={onOpenProfile}
             title="Click to view profile or change password"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px 10px',
-              minHeight: '32px',
+              padding: '3px 8px',
+              minHeight: '28px',
             }}
           >
-            {role === 'admin' ? (
-              <Shield size={14} color="var(--primary-action)" style={{ flexShrink: 0 }} />
-            ) : (
-              <User size={14} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
-            )}
             <span className="header-staff-name" style={{ fontWeight: 600 }}>{currentStaff.display_name}</span>
-            <span className="header-staff-id" style={{ color: 'var(--text-muted)', fontSize: '11px' }}>({currentStaff.staff_id})</span>
+            <span className="header-staff-id" style={{ color: 'var(--text-muted)', fontSize: '10.5px', marginLeft: '4px' }}>({currentStaff.staff_id})</span>
           </button>
 
           <button
@@ -69,10 +57,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="btn-secondary btn-sm"
             onClick={logout}
             title="Log out"
-            style={{ minHeight: '32px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}
+            style={{ minHeight: '28px', padding: '3px 8px', flexShrink: 0, fontWeight: 600 }}
           >
-            <LogOut size={14} />
-            <span>Exit</span>
+            Exit
           </button>
         </div>
       )}

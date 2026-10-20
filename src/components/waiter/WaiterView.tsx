@@ -10,19 +10,6 @@ import {
   OrderItem 
 } from '../../types/database';
 import { formatPaiseToINR } from '../../lib/currency';
-import { 
-  UtensilsCrossed, 
-  Search, 
-  Plus, 
-  Minus, 
-  Send, 
-  CheckCircle, 
-  Clock, 
-  AlertCircle,
-  ShoppingBag,
-  ArrowLeft,
-  Users
-} from 'lucide-react';
 
 export const WaiterView: React.FC = () => {
   const { currentStaff } = useAuth();
@@ -345,14 +332,13 @@ export const WaiterView: React.FC = () => {
                 setSubmitSuccessTicket(null);
                 setErrorMessage('');
               }}
-              style={{ minHeight: '32px', padding: '0 12px' }}
+              style={{ minHeight: '30px', padding: '0 10px', fontSize: '12px', fontWeight: 600 }}
             >
-              <ArrowLeft size={15} />
               <span>Back to Tables</span>
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>
+              <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
                 Table: {currentDisplayTable}
               </span>
               {currentSession ? (
@@ -371,30 +357,27 @@ export const WaiterView: React.FC = () => {
           <div
             className="panel"
             style={{
-              marginBottom: '12px',
-              padding: '10px 14px',
+              marginBottom: '10px',
+              padding: '8px 12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               flexWrap: 'wrap',
-              gap: '10px',
+              gap: '8px',
               backgroundColor: 'var(--bg-surface-elevated)',
               borderColor: 'var(--border-subtle)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Users size={16} color="var(--primary-action)" />
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)' }}>
-                  Customer Allocation (Max 2)
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                  Allocate up to 2 separate customers per table with individual bills
-                </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '12.5px', color: 'var(--text-primary)' }}>
+                Customer Allocation (Max 2)
+              </div>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                Allocate up to 2 separate customers per table with individual bills
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {/* Customer 1 Slot */}
               <button
                 type="button"
@@ -403,9 +386,9 @@ export const WaiterView: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  padding: '6px 14px',
-                  borderRadius: '8px',
-                  fontSize: '12.5px',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  fontSize: '11.5px',
                   fontWeight: 700,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
@@ -420,11 +403,11 @@ export const WaiterView: React.FC = () => {
               >
                 <span>Customer 1 ({selectedTable?.table_number})</span>
                 {customer1Session ? (
-                  <span className="badge badge-pending" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                  <span className="badge badge-pending" style={{ fontSize: '9px', padding: '1px 4px' }}>
                     Active
                   </span>
                 ) : (
-                  <span className="badge badge-settled" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                  <span className="badge badge-settled" style={{ fontSize: '9px', padding: '1px 4px' }}>
                     Vacant
                   </span>
                 )}
@@ -438,9 +421,9 @@ export const WaiterView: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  padding: '6px 14px',
-                  borderRadius: '8px',
-                  fontSize: '12.5px',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  fontSize: '11.5px',
                   fontWeight: 700,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
@@ -455,11 +438,11 @@ export const WaiterView: React.FC = () => {
               >
                 <span>Customer 2 ({selectedTable?.table_number} (2))</span>
                 {customer2Session ? (
-                  <span className="badge badge-pending" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                  <span className="badge badge-pending" style={{ fontSize: '9px', padding: '1px 4px' }}>
                     Active
                   </span>
                 ) : (
-                  <span className="badge badge-settled" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                  <span className="badge badge-settled" style={{ fontSize: '9px', padding: '1px 4px' }}>
                     Vacant
                   </span>
                 )}
@@ -468,8 +451,7 @@ export const WaiterView: React.FC = () => {
           </div>
 
           {errorMessage && (
-            <div className="alert-banner alert-banner-danger">
-              <AlertCircle size={16} />
+            <div className="alert-banner alert-banner-danger" style={{ marginBottom: '10px' }}>
               <span>{errorMessage}</span>
             </div>
           )}
@@ -484,14 +466,11 @@ export const WaiterView: React.FC = () => {
                 alignItems: 'center',
                 flexWrap: 'wrap',
                 gap: '8px',
-                marginBottom: '14px',
+                marginBottom: '12px',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CheckCircle size={18} color="var(--success)" />
-                <div>
-                  <strong>Order Accepted!</strong> Kitchen ticket <strong>{submitSuccessTicket.ticket_number}</strong> sent for <strong>{submitSuccessTicket.tableDisplay}</strong>.
-                </div>
+              <div>
+                <strong>Order Accepted!</strong> Kitchen ticket <strong>{submitSuccessTicket.ticket_number}</strong> sent for <strong>{submitSuccessTicket.tableDisplay}</strong>.
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button
@@ -520,18 +499,15 @@ export const WaiterView: React.FC = () => {
             {/* Left Column: Menu Browsing & Dish Search */}
             <div>
               {/* Search & Categories Bar */}
-              <div className="panel" style={{ marginBottom: '12px', padding: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                  <div style={{ position: 'relative', flex: 1 }}>
-                    <Search size={15} style={{ position: 'absolute', left: '10px', top: '12px', color: 'var(--text-muted)' }} />
-                    <input
-                      type="text"
-                      placeholder="Search dishes by name..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      style={{ width: '100%', paddingLeft: '32px' }}
-                    />
-                  </div>
+              <div className="panel" style={{ marginBottom: '10px', padding: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                  <input
+                    type="text"
+                    placeholder="Search dishes by name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ width: '100%' }}
+                  />
                   {searchQuery && (
                     <button type="button" className="btn-secondary btn-sm" onClick={() => setSearchQuery('')}>
                       Clear
@@ -540,7 +516,7 @@ export const WaiterView: React.FC = () => {
                 </div>
 
                 {/* Category pills - wrapped to prevent horizontal scrolling */}
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     className={`btn-sm ${selectedCategoryId === 'all' ? 'btn-primary' : 'btn-secondary'}`}
@@ -563,9 +539,9 @@ export const WaiterView: React.FC = () => {
 
               {/* Dish Grid / List */}
               {filteredDishes.length === 0 ? (
-                <div className="panel" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <div className="panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
                   <p style={{ fontWeight: 600 }}>No menu items found</p>
-                  <span style={{ fontSize: '12px' }}>
+                  <span style={{ fontSize: '11.5px' }}>
                     {searchQuery ? 'No dishes match your search query.' : 'Counter Admin can add categories and dishes in "Menu & Pricing".'}
                   </span>
                 </div>
@@ -606,10 +582,10 @@ export const WaiterView: React.FC = () => {
                               <button
                                 type="button"
                                 className="btn-secondary btn-sm"
-                                style={{ width: '26px', height: '26px', padding: 0, backgroundColor: '#F1F5F9', color: '#0F172A', border: '1px solid #CBD5E1' }}
+                                style={{ width: '26px', height: '26px', padding: 0, backgroundColor: '#F1F5F9', color: '#0F172A', border: '1px solid #CBD5E1', fontSize: '14px', fontWeight: 800 }}
                                 onClick={() => removeFromCart(dish.id)}
                               >
-                                <Minus size={12} />
+                                -
                               </button>
                               <span style={{ fontWeight: 800, minWidth: '18px', textAlign: 'center', color: '#0F172A', fontSize: '13px' }}>
                                 {qtyInCart}
@@ -617,11 +593,11 @@ export const WaiterView: React.FC = () => {
                               <button
                                 type="button"
                                 className="btn-primary btn-sm"
-                                style={{ width: '26px', height: '26px', padding: 0 }}
+                                style={{ width: '26px', height: '26px', padding: 0, fontSize: '14px', fontWeight: 800 }}
                                 onClick={() => addToCart(dish.id)}
                                 disabled={!isAvailable}
                               >
-                                <Plus size={12} />
+                                +
                               </button>
                             </div>
                           ) : (
@@ -630,9 +606,8 @@ export const WaiterView: React.FC = () => {
                               className="btn-primary btn-sm"
                               onClick={() => addToCart(dish.id)}
                               disabled={!isAvailable}
-                              style={{ width: '100%', minHeight: '28px' }}
+                              style={{ width: '100%', minHeight: '28px', fontWeight: 700 }}
                             >
-                              <Plus size={12} />
                               Add Item
                             </button>
                           )}
@@ -646,12 +621,9 @@ export const WaiterView: React.FC = () => {
 
             {/* Right Column: Order Summary / Cart */}
             <div>
-              <div className="panel" style={{ position: 'sticky', top: '64px' }}>
+              <div className="panel" style={{ position: 'sticky', top: '56px' }}>
                 <div className="panel-header">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <ShoppingBag size={16} color="var(--primary-action)" />
-                    <h3 style={{ color: 'var(--text-primary)' }}>Order For {currentDisplayTable}</h3>
-                  </div>
+                  <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>Order For {currentDisplayTable}</h3>
                   {totalCartQty > 0 && (
                     <button type="button" className="btn-secondary btn-sm" onClick={clearCart} style={{ border: 'none', color: 'var(--text-muted)' }}>
                       Clear
@@ -660,9 +632,8 @@ export const WaiterView: React.FC = () => {
                 </div>
 
                 {cartEntries.length === 0 ? (
-                  <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    <UtensilsCrossed size={28} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
-                    <p style={{ fontSize: '13px' }}>Cart is empty</p>
+                  <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <p style={{ fontSize: '13px', fontWeight: 600 }}>Cart is empty</p>
                     <span style={{ fontSize: '11px' }}>Select dishes from the menu to add</span>
                   </div>
                 ) : (
@@ -675,27 +646,27 @@ export const WaiterView: React.FC = () => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            padding: '8px 0',
+                            padding: '6px 0',
                             borderBottom: '1px solid var(--border-subtle)',
-                            fontSize: '13px',
+                            fontSize: '12.5px',
                           }}
                         >
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item!.name}</div>
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                              {formatPaiseToINR(item!.price_paise)} × {quantity}
+                            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                              {formatPaiseToINR(item!.price_paise)} x {quantity}
                             </div>
                           </div>
 
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                               <button
                                 type="button"
                                 className="btn-secondary btn-sm"
-                                style={{ width: '22px', height: '22px', padding: 0 }}
+                                style={{ width: '22px', height: '22px', padding: 0, fontSize: '13px', fontWeight: 800 }}
                                 onClick={() => removeFromCart(item!.id)}
                               >
-                                <Minus size={11} />
+                                -
                               </button>
                               <span style={{ fontWeight: 600, minWidth: '16px', textAlign: 'center', color: 'var(--text-primary)' }}>
                                 {quantity}
@@ -703,13 +674,13 @@ export const WaiterView: React.FC = () => {
                               <button
                                 type="button"
                                 className="btn-secondary btn-sm"
-                                style={{ width: '22px', height: '22px', padding: 0 }}
+                                style={{ width: '22px', height: '22px', padding: 0, fontSize: '13px', fontWeight: 800 }}
                                 onClick={() => addToCart(item!.id)}
                               >
-                                <Plus size={11} />
+                                +
                               </button>
                             </div>
-                            <span style={{ fontWeight: 700, minWidth: '60px', textAlign: 'right', color: 'var(--text-primary)' }}>
+                            <span style={{ fontWeight: 700, minWidth: '55px', textAlign: 'right', color: 'var(--text-primary)' }}>
                               {formatPaiseToINR(subtotalPaise)}
                             </span>
                           </div>
@@ -720,43 +691,41 @@ export const WaiterView: React.FC = () => {
                     {/* Subtotal */}
                     <div
                       style={{
-                        paddingTop: '8px',
+                        paddingTop: '6px',
                         borderTop: '1px solid var(--border-strong)',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: '14px',
+                        marginBottom: '12px',
                       }}
                     >
                       <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Items Total</span>
-                      <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--text-primary)' }}>{formatPaiseToINR(totalCartPaise)}</span>
+                      <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>{formatPaiseToINR(totalCartPaise)}</span>
                     </div>
 
                     {/* Primary Action Button: Send to Kitchen (KOT) */}
                     <button
                       type="button"
                       className="btn-primary"
-                      style={{ width: '100%', minHeight: '46px', fontSize: '14px', fontWeight: 700 }}
+                      style={{ width: '100%', minHeight: '42px', fontSize: '13px', fontWeight: 700 }}
                       onClick={handleSubmitOrder}
                       disabled={isSubmitting || totalCartQty === 0}
                     >
-                      <Send size={15} />
-                      <span>{isSubmitting ? 'Sending to Kitchen (KOT)...' : `Send to Kitchen (${currentDisplayTable}) (${totalCartQty} items)`}</span>
+                      {isSubmitting ? 'Sending to Kitchen (KOT)...' : `Send to Kitchen (${currentDisplayTable}) (${totalCartQty} items)`}
                     </button>
                   </div>
                 )}
 
                 {/* Preparation Status of Current Customer's Active Session */}
                 {currentSession && tableSessionOrderItems.length > 0 && (
-                  <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                  <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.03em' }}>
                         ACTIVE KITCHEN PREPARATION
                       </span>
-                      <Clock size={13} color="var(--text-muted)" />
                     </div>
 
-                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                    <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
                       {tableSessionOrderItems.map((item) => (
                         <div
                           key={item.id}
@@ -765,12 +734,12 @@ export const WaiterView: React.FC = () => {
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             padding: '4px 0',
-                            fontSize: '12px',
+                            fontSize: '11.5px',
                             borderBottom: '1px solid var(--border-subtle)',
                           }}
                         >
                           <span style={{ fontWeight: 500 }}>
-                            {item.dish_name} × {item.ordered_quantity - item.cancelled_quantity}
+                            {item.dish_name} x {item.ordered_quantity - item.cancelled_quantity}
                           </span>
                           {item.status === 'ready' ? (
                             <span className="badge badge-ready">READY</span>

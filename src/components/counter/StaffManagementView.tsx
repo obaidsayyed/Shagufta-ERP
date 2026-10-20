@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import { StaffProfile, StaffRole } from '../../types/database';
-import { UserPlus, Shield, User, AlertCircle, X, Eye, EyeOff, CheckCircle } from 'lucide-react';
+
 
 interface StaffManagementViewProps {
   staffList: StaffProfile[];
@@ -92,35 +92,30 @@ export const StaffManagementView: React.FC<StaffManagementViewProps> = ({
 
   return (
     <div>
-      <div className="responsive-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+      <div className="responsive-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
         <div>
-          <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Staff & Role Administration</h2>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Staff & Role Administration</h2>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
             Provision waiter and kitchen staff accounts with auto-generated staff IDs and cloud auth login
           </span>
         </div>
 
-        <button type="button" className="btn-primary" onClick={() => setShowCreateModal(true)}>
-          <UserPlus size={14} />
+        <button type="button" className="btn-primary btn-sm" onClick={() => setShowCreateModal(true)}>
           <span>Create Staff Account</span>
         </button>
       </div>
 
       {noticeMessage && (
-        <div className="alert-banner alert-banner-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CheckCircle size={15} color="var(--success)" />
-            <span>{noticeMessage}</span>
-          </div>
-          <button type="button" className="btn-secondary btn-sm" onClick={() => setNoticeMessage('')} style={{ border: 'none', padding: '2px 6px' }}>
-            <X size={14} />
+        <div className="alert-banner alert-banner-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '6px 10px' }}>
+          <span>{noticeMessage}</span>
+          <button type="button" className="btn-secondary btn-sm" onClick={() => setNoticeMessage('')} style={{ border: 'none', padding: '1px 6px', fontSize: '11px' }}>
+            Dismiss
           </button>
         </div>
       )}
 
       {errorMessage && (
-        <div className="alert-banner alert-banner-danger">
-          <AlertCircle size={15} />
+        <div className="alert-banner alert-banner-danger" style={{ marginBottom: '10px', padding: '6px 10px' }}>
           <span>{errorMessage}</span>
         </div>
       )}
@@ -157,18 +152,12 @@ export const StaffManagementView: React.FC<StaffManagementViewProps> = ({
                   <td>
                     <span
                       style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
                         textTransform: 'capitalize',
                         fontWeight: 600,
                         fontSize: '12px',
                         color: staff.role === 'admin' ? 'var(--primary-action)' : staff.role === 'chef' ? 'var(--secondary-accent)' : 'var(--text-primary)',
                       }}
                     >
-                      {staff.role === 'admin' && <Shield size={13} color="var(--primary-action)" />}
-                      {staff.role === 'waiter' && <User size={13} />}
-                      {staff.role === 'chef' && <User size={13} color="var(--secondary-accent)" />}
                       {staff.role === 'admin' ? 'Administrator' : staff.role === 'waiter' ? 'Waiter' : 'Chef / Kitchen'}
                     </span>
                   </td>
@@ -209,69 +198,69 @@ export const StaffManagementView: React.FC<StaffManagementViewProps> = ({
       {/* Create Staff Account Modal */}
       {showCreateModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '440px' }}>
+          <div className="modal-content" style={{ maxWidth: '420px' }}>
             <div className="modal-header">
-              <h3 style={{ color: 'var(--text-primary)' }}>Create Staff Account</h3>
-              <button type="button" className="btn-secondary btn-sm" onClick={() => setShowCreateModal(false)} style={{ border: 'none' }}>
-                <X size={15} />
+              <h3 style={{ fontSize: '15px', color: 'var(--text-primary)' }}>Create Staff Account</h3>
+              <button type="button" className="btn-secondary btn-sm" onClick={() => setShowCreateModal(false)} style={{ padding: '2px 8px', fontSize: '11px' }}>
+                Close
               </button>
             </div>
             <form onSubmit={handleCreateStaff}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ padding: '12px 14px' }}>
                 {/* Auto-generated Staff ID display */}
-                <div style={{ marginBottom: '14px', padding: '10px 12px', backgroundColor: 'var(--bg-surface-elevated)', borderRadius: '6px', border: '1px solid var(--border-strong)' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
+                <div style={{ marginBottom: '10px', padding: '8px 10px', backgroundColor: 'var(--bg-surface-elevated)', borderRadius: '5px', border: '1px solid var(--border-strong)' }}>
+                  <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
                     Auto-Generated Staff ID
                   </div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, fontFamily: 'monospace', color: 'var(--primary-action)', marginTop: '2px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 800, fontFamily: 'monospace', color: 'var(--primary-action)', marginTop: '2px' }}>
                     {nextStaffIdPreview}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '1px' }}>
                     Generated automatically by the system for operational badge tracking.
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '14px' }}>
-                  <label htmlFor="staff-name-input">Display Name (Full Name)</label>
+                <div style={{ marginBottom: '10px' }}>
+                  <label htmlFor="staff-name-input" style={{ fontSize: '12px', fontWeight: 600 }}>Display Name (Full Name)</label>
                   <input
                     id="staff-name-input"
                     type="text"
                     placeholder="e.g. Ramesh Kumar"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
                     required
                   />
                 </div>
 
-                <div style={{ marginBottom: '14px' }}>
-                  <label htmlFor="staff-role-select">Assigned Operational Role</label>
+                <div style={{ marginBottom: '10px' }}>
+                  <label htmlFor="staff-role-select" style={{ fontSize: '12px', fontWeight: 600 }}>Assigned Operational Role</label>
                   <select
                     id="staff-role-select"
                     value={role}
                     onChange={(e) => setRole(e.target.value as 'waiter' | 'chef')}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
                   >
                     <option value="waiter">Waiter (Floor tables, order booking)</option>
                     <option value="chef">Chef / Kitchen (Live food prep queue)</option>
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '14px' }}>
-                  <label htmlFor="staff-email-input">Login Email Address (Required)</label>
+                <div style={{ marginBottom: '10px' }}>
+                  <label htmlFor="staff-email-input" style={{ fontSize: '12px', fontWeight: 600 }}>Login Email Address (Required)</label>
                   <input
                     id="staff-email-input"
                     type="email"
                     placeholder="e.g. ramesh@hotel.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
                     required
                   />
                 </div>
 
-                <div style={{ marginBottom: '14px' }}>
-                  <label htmlFor="staff-pass-input">Password (Required)</label>
+                <div style={{ marginBottom: '10px' }}>
+                  <label htmlFor="staff-pass-input" style={{ fontSize: '12px', fontWeight: 600 }}>Password (Required)</label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                     <input
                       id="staff-pass-input"
@@ -279,7 +268,7 @@ export const StaffManagementView: React.FC<StaffManagementViewProps> = ({
                       placeholder="Minimum 6 characters"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      style={{ width: '100%', paddingRight: '38px' }}
+                      style={{ width: '100%', paddingRight: '48px', minHeight: '30px', fontSize: '12px' }}
                       required
                       minLength={6}
                     />
@@ -289,25 +278,27 @@ export const StaffManagementView: React.FC<StaffManagementViewProps> = ({
                       title={showPassword ? 'Hide password' : 'Show password'}
                       style={{
                         position: 'absolute',
-                        right: '4px',
+                        right: '8px',
                         background: 'none',
                         border: 'none',
-                        padding: '6px',
+                        padding: '2px 4px',
                         color: 'var(--text-muted)',
                         minHeight: 'auto',
+                        fontSize: '11px',
+                        cursor: 'pointer',
                       }}
                     >
-                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                      {showPassword ? 'Hide' : 'Show'}
                     </button>
                   </div>
                 </div>
               </div>
 
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowCreateModal(false)} disabled={isSubmitting}>
+              <div className="modal-footer" style={{ padding: '8px 14px' }}>
+                <button type="button" className="btn-secondary btn-sm" onClick={() => setShowCreateModal(false)} disabled={isSubmitting}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                <button type="submit" className="btn-primary btn-sm" disabled={isSubmitting}>
                   {isSubmitting ? 'Provisioning...' : 'Create Staff Account'}
                 </button>
               </div>

@@ -7,16 +7,7 @@ import {
 } from '../../types/analytics';
 import { api } from '../../lib/api';
 import { formatPaiseToINR } from '../../lib/currency';
-import { 
-  TrendingUp, 
-  Banknote, 
-  Smartphone, 
-  Receipt, 
-  Calendar, 
-  Award,
-  Layers,
-  PieChart
-} from 'lucide-react';
+
 
 interface AnalyticsDashboardProps {
   bills: Bill[];
@@ -43,24 +34,23 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   return (
     <div>
       {/* Analytics Filter Header */}
-      <div className="panel" style={{ marginBottom: '16px', padding: '12px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+      <div className="panel" style={{ marginBottom: '12px', padding: '10px 14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Financial & Dish Analytics</h2>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+            <h2 style={{ fontSize: '15px', fontWeight: 700 }}>Financial & Dish Analytics</h2>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
               Authoritative revenue auditing, payment collections and category-aware dish performance
             </span>
           </div>
 
           {/* Filter Controls */}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
             {/* Date Preset Selector */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Calendar size={13} color="var(--text-muted)" />
               <select
                 value={filter.preset}
                 onChange={(e) => setFilter({ ...filter, preset: e.target.value as DateFilterPreset })}
-                style={{ minHeight: '32px', fontSize: '12px' }}
+                style={{ minHeight: '30px', fontSize: '12px' }}
               >
                 <option value="today">Today</option>
                 <option value="yesterday">Yesterday</option>
@@ -77,14 +67,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   type="date"
                   value={filter.customStartDate || ''}
                   onChange={(e) => setFilter({ ...filter, customStartDate: e.target.value })}
-                  style={{ minHeight: '32px', fontSize: '12px', padding: '2px 6px' }}
+                  style={{ minHeight: '30px', fontSize: '12px', padding: '2px 6px' }}
                 />
                 <span style={{ fontSize: '12px' }}>to</span>
                 <input
                   type="date"
                   value={filter.customEndDate || ''}
                   onChange={(e) => setFilter({ ...filter, customEndDate: e.target.value })}
-                  style={{ minHeight: '32px', fontSize: '12px', padding: '2px 6px' }}
+                  style={{ minHeight: '30px', fontSize: '12px', padding: '2px 6px' }}
                 />
               </div>
             )}
@@ -93,7 +83,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             <select
               value={filter.paymentMethod}
               onChange={(e) => setFilter({ ...filter, paymentMethod: e.target.value as PaymentFilter })}
-              style={{ minHeight: '32px', fontSize: '12px' }}
+              style={{ minHeight: '30px', fontSize: '12px' }}
             >
               <option value="all">All Payments</option>
               <option value="cash">Cash Only</option>
@@ -104,15 +94,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       </div>
 
       {/* Metric Cards - Minimalist, functional proportion */}
-      <div className="grid-4" style={{ marginBottom: '16px' }}>
-        <div className="panel" style={{ padding: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Settled Collections
-            </span>
-            <TrendingUp size={15} color="var(--accent)" />
+      <div className="grid-4" style={{ marginBottom: '12px' }}>
+        <div className="panel" style={{ padding: '10px 12px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px' }}>
+            Settled Collections
           </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>
+          <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>
             {formatPaiseToINR(overall.totalSettledRevenuePaise)}
           </div>
           <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
@@ -120,14 +107,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </span>
         </div>
 
-        <div className="panel" style={{ padding: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Cash Collections
-            </span>
-            <Banknote size={15} color="var(--success)" />
+        <div className="panel" style={{ padding: '10px 12px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px' }}>
+            Cash Collections
           </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>
+          <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>
             {formatPaiseToINR(overall.totalCashPaise)}
           </div>
           <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
@@ -137,14 +121,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </span>
         </div>
 
-        <div className="panel" style={{ padding: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Online (UPI/Digital)
-            </span>
-            <Smartphone size={15} color="#0284c7" />
+        <div className="panel" style={{ padding: '10px 12px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px' }}>
+            Online (UPI/Digital)
           </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>
+          <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>
             {formatPaiseToINR(overall.totalOnlinePaise)}
           </div>
           <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
@@ -154,14 +135,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </span>
         </div>
 
-        <div className="panel" style={{ padding: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Average Settled Bill
-            </span>
-            <Receipt size={15} color="var(--warning)" />
+        <div className="panel" style={{ padding: '10px 12px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px' }}>
+            Average Settled Bill
           </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>
+          <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>
             {formatPaiseToINR(overall.averageBillPaise)}
           </div>
           <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
@@ -171,7 +149,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       </div>
 
       {/* Operational Integrity Banner: Explicit distinction between settled revenue and unsettled running bills */}
-      <div className="alert-banner alert-banner-info" style={{ marginBottom: '16px' }}>
+      <div className="alert-banner alert-banner-info" style={{ marginBottom: '12px', padding: '8px 12px' }}>
         <span>
           <strong>Financial Integrity Notice:</strong> Unsettled dining sessions currently total{' '}
           <strong>{formatPaiseToINR(overall.activeUnsettledPaise)}</strong> across {overall.activeUnsettledBillsCount} active bills.{' '}

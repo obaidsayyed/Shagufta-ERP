@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Bill, TableSession, ParcelOrder, DiningTable, OrderItem, BillAdjustment } from '../../types/database';
 import { formatPaiseToINR } from '../../lib/currency';
-import { Search, Receipt, Filter } from 'lucide-react';
+
 import { BillDetailModal } from './BillDetailModal';
 
 interface HistoricalBillsViewProps {
@@ -80,25 +80,23 @@ export const HistoricalBillsView: React.FC<HistoricalBillsViewProps> = ({
       </div>
 
       {/* Filter Toolbar */}
-      <div className="panel" style={{ marginBottom: '14px', padding: '10px 14px' }}>
+      <div className="panel" style={{ marginBottom: '12px', padding: '8px 12px' }}>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
-            <Search size={14} style={{ position: 'absolute', left: '10px', top: '11px', color: 'var(--text-muted)' }} />
+          <div style={{ flex: 1, minWidth: '200px' }}>
             <input
               type="text"
-              placeholder="Search by Bill #, Table (e.g. T4) or Parcel code..."
+              placeholder="Search by Bill #, Table or Parcel..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ width: '100%', paddingLeft: '32px', minHeight: '34px' }}
+              style={{ width: '100%', minHeight: '30px', fontSize: '12px' }}
             />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Filter size={14} color="var(--text-muted)" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'all' | 'settled' | 'unsettled')}
-              style={{ minHeight: '34px', fontSize: '12px' }}
+              style={{ minHeight: '30px', fontSize: '12px' }}
             >
               <option value="all">All Statuses</option>
               <option value="settled">Settled Only</option>
@@ -108,7 +106,7 @@ export const HistoricalBillsView: React.FC<HistoricalBillsViewProps> = ({
             <select
               value={paymentFilter}
               onChange={(e) => setPaymentFilter(e.target.value as 'all' | 'cash' | 'online')}
-              style={{ minHeight: '34px', fontSize: '12px' }}
+              style={{ minHeight: '30px', fontSize: '12px' }}
             >
               <option value="all">All Payment Methods</option>
               <option value="cash">Cash Only</option>
@@ -121,9 +119,8 @@ export const HistoricalBillsView: React.FC<HistoricalBillsViewProps> = ({
       {/* Bills Table */}
       <div className="panel table-responsive" style={{ padding: 0 }}>
         {filteredBills.length === 0 ? (
-          <div style={{ padding: '36px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <Receipt size={28} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
-            <p style={{ fontWeight: 600 }}>No bills match your search criteria</p>
+          <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <p style={{ fontWeight: 600, fontSize: '13px' }}>No bills match your search criteria</p>
           </div>
         ) : (
           <table>
@@ -164,7 +161,7 @@ export const HistoricalBillsView: React.FC<HistoricalBillsViewProps> = ({
                     <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                       {bill.settled_at
                         ? new Date(bill.settled_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })
-                        : '—'}
+                        : '-'}
                     </td>
                     <td>
                       {bill.payment_method ? (
@@ -172,7 +169,7 @@ export const HistoricalBillsView: React.FC<HistoricalBillsViewProps> = ({
                           {bill.payment_method}
                         </span>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)' }}>—</span>
+                        <span style={{ color: 'var(--text-muted)' }}>-</span>
                       )}
                     </td>
                     <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '14px' }}>
