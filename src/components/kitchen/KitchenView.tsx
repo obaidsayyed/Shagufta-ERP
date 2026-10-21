@@ -16,21 +16,75 @@ export const KitchenView: React.FC = () => {
   const { 
     audioUnlocked, 
     soundEnabled, 
+    isRinging,
     unlockAudio, 
     setSoundEnabled, 
-    playNewOrderChime, 
+    playKitchenOrderRing, 
+    stopRing,
+    startKitchenBackgroundKeepAlive,
+    stopKitchenBackgroundKeepAlive,
     registerInitialOrders, 
     notifyIfNewOrder 
   } = useSound();
 
-  const [orders, setOrders] = useState<OrderTicket[]>([]);
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-  const [tables, setTables] = useState<DiningTable[]>([]);
-  const [parcels, setParcels] = useState<ParcelOrder[]>([]);
   const [prepGroups, setPrepGroups] = useState<KitchenPreparationGroup[]>([]);
   
   const [markingGroupKey, setMarkingGroupKey] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // 1. Screen Wake Lock: Strictly for Kitchen Staff to prevent screen sleep/dimming
+  useEffect(() => {
+    if (currentStaff?.role !== 'chef') return;
+
+    let wakeLockSentinel: { release: () => Promise<void> } | null = null;
+
+    const requestWakeLock = async () => {
+      try {
+        const nav = navigator as unknown as { wakeLock?: { request: (type: string) => Promise<{ release: () => Promise<void> }> } };
+        if (nav.wakeLock?.request) {
+          wakeLockSentinel = await nav.wakeLock.request('screen');
+        }
+      } catch (err) {
+        console.warn('Screen WakeLock unavailable or denied:', err);
+      }
+    };
+
+    requestWakeLock();
+
+    // Re-acquire on visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !wakeLockSentinel) {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Request Notification permission for background/lock-screen alerts
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (wakeLockSentinel) {
+        wakeLockSentinel.release().catch(() => {});
+      }
+    };
+  }, [currentStaff?.role]);
+
+  // 2. Background Audio Keep-Alive: Strictly for Kitchen Staff
+  useEffect(() => {
+    if (currentStaff?.role !== 'chef') return;
+
+    if (audioUnlocked) {
+      startKitchenBackgroundKeepAlive();
+    }
+
+    return () => {
+      stopKitchenBackgroundKeepAlive();
+    };
+  }, [currentStaff?.role, audioUnlocked, startKitchenBackgroundKeepAlive, stopKitchenBackgroundKeepAlive]);
 
   const loadData = async (isInitialLoad = false) => {
     try {
@@ -47,10 +101,7 @@ export const KitchenView: React.FC = () => {
         registerInitialOrders(oList.map((o) => o.id));
       }
 
-      setOrders(oList);
-      setOrderItems(oiList);
-      setTables(tList);
-      setParcels(pList);
+
 
       // Compute grouped preparation items with table sessions
       const groups = api.getKitchenPreparationGroups(oList, oiList, tList, pList, sList);
@@ -68,8 +119,8 @@ export const KitchenView: React.FC = () => {
       if (event === 'NEW_ORDER') {
         const data = payload as { order: OrderTicket };
         if (data?.order?.id) {
-          // Trigger audible alert ONLY if this is a genuinely new order ticket
-          await notifyIfNewOrder(data.order.id);
+          // Trigger 5.0-second authentic kitchen ringtone
+          await notifyIfNewOrder(data.order.id, data.order.ticket_number);
         }
       }
       loadData(false);
@@ -119,6 +170,26 @@ export const KitchenView: React.FC = () => {
 
           {/* Sound Controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {isRinging && (
+              <button
+                type="button"
+                className="btn-danger btn-sm"
+                onClick={stopRing}
+                style={{
+                  fontWeight: 800,
+                  fontSize: '11.5px',
+                  padding: '3px 10px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                }}
+                title="Silence currently ringing alert"
+              >
+                <span>🔔 Ringing (5s)</span>
+                <span style={{ textDecoration: 'underline' }}>Silence</span>
+              </button>
+            )}
+
             {!audioUnlocked ? (
               <button
                 type="button"
@@ -142,10 +213,10 @@ export const KitchenView: React.FC = () => {
             <button
               type="button"
               className="btn-secondary btn-sm"
-              onClick={playNewOrderChime}
-              title="Test the chime sound"
+              onClick={playKitchenOrderRing}
+              title="Test the 5-second kitchen ringtone"
             >
-              Test Chime
+              Test Ring (5s)
             </button>
           </div>
         </div>
@@ -156,7 +227,7 @@ export const KitchenView: React.FC = () => {
             style={{ marginTop: '8px', marginBottom: 0, padding: '6px 10px', fontSize: '12px' }}
           >
             <span>
-              <strong>Audio Notice:</strong> Browser security requires you to click <strong>&quot;Enable Sound Alerts&quot;</strong> once so kitchen chimes can ring on new tickets.
+              <strong>Audio Notice:</strong> Click <strong>&quot;Enable Sound Alerts&quot;</strong> once so the kitchen terminal can ring for 5 seconds when new orders arrive.
             </span>
           </div>
         )}

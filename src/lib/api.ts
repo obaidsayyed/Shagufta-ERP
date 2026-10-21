@@ -1,27 +1,27 @@
 // Unified Domain API Service for Hotel Order Management
 // Seamlessly delegates to Supabase Client (if configured) or Mock Database Engine
 
-import { 
-  StaffProfile, 
-  MenuCategory, 
-  MenuItem, 
-  DiningTable, 
-  TableSession, 
-  ParcelOrder, 
-  OrderTicket, 
-  OrderItem, 
-  Bill, 
-  BillAdjustment, 
-  AdjustmentType, 
+import {
+  StaffProfile,
+  MenuCategory,
+  MenuItem,
+  DiningTable,
+  TableSession,
+  ParcelOrder,
+  OrderTicket,
+  OrderItem,
+  Bill,
+  BillAdjustment,
+  AdjustmentType,
   PaymentMethod,
   KitchenPreparationGroup
 } from '../types/database';
-import { 
-  AnalyticsFilter, 
-  OverallMetrics, 
-  DayMetricPoint, 
-  DishPerformance, 
-  CategoryPerformance 
+import {
+  AnalyticsFilter,
+  OverallMetrics,
+  DayMetricPoint,
+  DishPerformance,
+  CategoryPerformance
 } from '../types/analytics';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { mockDb } from './mockDatabase';
@@ -196,12 +196,12 @@ export const api = {
       }
     }
 
-    // Offline / Mock verification
-    const validOldPassword = localStorage.getItem('hotel_erp_mock_password') || 'Admin@123';
+    // Offline / local storage verification
+    const validOldPassword = localStorage.getItem('hotel_erp_active_password') || 'Admin@123';
     if (oldPassword !== validOldPassword) {
       throw new Error('Incorrect current password. Please verify and try again.');
     }
-    localStorage.setItem('hotel_erp_mock_password', newPassword);
+    localStorage.setItem('hotel_erp_active_password', newPassword);
   },
 
   // 2. Menu Categories & Items
@@ -209,7 +209,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('menu_categories').select('*').order('display_order');
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           mockDb.syncCategories(data as MenuCategory[]);
           return data as MenuCategory[];
         }
@@ -225,7 +225,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('menu_items').select('*').order('name');
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           mockDb.syncMenuItems(data as MenuItem[]);
           return data as MenuItem[];
         }
@@ -330,7 +330,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('tables').select('*').order('table_number');
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           mockDb.syncTables(data as DiningTable[]);
           return data as DiningTable[];
         }
@@ -412,7 +412,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('table_sessions').select('*');
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data as TableSession[];
         }
         logApiNotice('getTableSessions', error?.message);
@@ -427,7 +427,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('parcel_orders').select('*').order('created_at', { ascending: false });
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data as ParcelOrder[];
         }
         logApiNotice('getParcelOrders', error?.message);
@@ -443,7 +443,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data as OrderTicket[];
         }
         logApiNotice('getOrders', error?.message);
@@ -458,7 +458,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('order_items').select('*').order('created_at', { ascending: true });
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data as OrderItem[];
         }
         logApiNotice('getOrderItems', error?.message);
@@ -473,7 +473,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('bills').select('*').order('created_at', { ascending: false });
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data as Bill[];
         }
         logApiNotice('getBills', error?.message);
@@ -488,7 +488,7 @@ export const api = {
     if (useLiveSupabase && supabase) {
       try {
         const { data, error } = await supabase.from('bill_adjustments').select('*').order('created_at', { ascending: false });
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data as BillAdjustment[];
         }
         logApiNotice('getBillAdjustments', error?.message);
@@ -631,9 +631,9 @@ export const api = {
         group = {
           group_key: groupKey,
           order_type: orderType,
-          table_session_id: parentOrder.table_session_id || undefined,
+          table_session_id: parentOrder?.table_session_id || undefined,
           table_number: sessionTableMap.get(sessionKey) || 'Table',
-          parcel_id: parentOrder.parcel_id || undefined,
+          parcel_id: parentOrder?.parcel_id || undefined,
           parcel_code: parcelMap.get(parcelKey) || 'Parcel',
           menu_item_id: item.menu_item_id,
           dish_name: item.dish_name,
@@ -672,7 +672,7 @@ export const api = {
       const allMatchingItems = orderItems.filter((oi) =>
         oi.menu_item_id === group.menu_item_id &&
         ((group.table_session_id && oi.table_session_id === group.table_session_id) ||
-         (group.parcel_id && oi.parcel_id === group.parcel_id))
+          (group.parcel_id && oi.parcel_id === group.parcel_id))
       );
       group.total_prepared_qty = allMatchingItems.reduce((acc, oi) => acc + oi.prepared_quantity, 0);
     }
@@ -737,6 +737,74 @@ export const api = {
     }
 
     return mockDb.rpcAdjustOrderItem(params);
+  },
+
+  // 8b. Direct Bill Item Adjustment (Increase, Decrease, Delete)
+  async adjustBillItem(params: {
+    bill_id: string;
+    order_item_id: string;
+    action: 'increase' | 'decrease' | 'delete';
+    caller_staff?: StaffProfile;
+  }): Promise<{ status: string; bill?: Bill; order_items?: OrderItem[] }> {
+    if (useLiveSupabase && supabase) {
+      try {
+        const { data, error } = await supabase.rpc('rpc_adjust_bill_item', {
+          p_bill_id: params.bill_id,
+          p_order_item_id: params.order_item_id,
+          p_action: params.action,
+        });
+        if (!error && data) {
+          try {
+            mockDb.rpcAdjustBillItem(params);
+          } catch {
+            // Ignore offline sync errors
+          }
+          return data;
+        }
+        if (error) {
+          logApiNotice('rpc_adjust_bill_item', error.message);
+          throw new Error(error.message);
+        }
+      } catch (err) {
+        logApiNotice('rpc_adjust_bill_item', err);
+        throw err;
+      }
+    }
+
+    return mockDb.rpcAdjustBillItem(params);
+  },
+
+  // 8c. Add Dish directly to Bill
+  async addDishToBill(params: {
+    bill_id: string;
+    menu_item_id: string;
+    caller_staff?: StaffProfile;
+  }): Promise<{ status: string; bill?: Bill; order_items?: OrderItem[] }> {
+    if (useLiveSupabase && supabase) {
+      try {
+        const { data, error } = await supabase.rpc('rpc_add_dish_to_bill', {
+          p_bill_id: params.bill_id,
+          p_menu_item_id: params.menu_item_id,
+        });
+        if (!error && data) {
+          try {
+            mockDb.rpcAddDishToBill(params);
+          } catch {
+            // Ignore offline sync errors
+          }
+          return data;
+        }
+        if (error) {
+          logApiNotice('rpc_add_dish_to_bill', error.message);
+          throw new Error(error.message);
+        }
+      } catch (err) {
+        logApiNotice('rpc_add_dish_to_bill', err);
+        throw err;
+      }
+    }
+
+    return mockDb.rpcAddDishToBill(params);
   },
 
   // 9. Settle Bill (Atomic settlement & payment recording)
@@ -852,7 +920,7 @@ export const api = {
     const settledSessionIds = new Set(settledBills.map((b) => b.table_session_id).filter(Boolean));
     const settledParcelIds = new Set(settledBills.map((b) => b.parcel_id).filter(Boolean));
 
-    const relevantOrderItems = orderItems.filter((oi) => 
+    const relevantOrderItems = orderItems.filter((oi) =>
       (oi.table_session_id && settledSessionIds.has(oi.table_session_id)) ||
       (oi.parcel_id && settledParcelIds.has(oi.parcel_id))
     );

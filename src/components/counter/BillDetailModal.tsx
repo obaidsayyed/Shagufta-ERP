@@ -1,7 +1,6 @@
-import React from 'react';
-import { Bill, OrderItem, BillAdjustment } from '../../types/database';
+import React, { useState } from 'react';
+import { Bill, OrderItem, BillAdjustment, MenuItem } from '../../types/database';
 import { formatPaiseToINR } from '../../lib/currency';
-
 
 interface BillDetailModalProps {
   isOpen: boolean;
@@ -9,9 +8,12 @@ interface BillDetailModalProps {
   bill: Bill | null;
   identifierTitle: string;
   orderItems: OrderItem[];
-  adjustments: BillAdjustment[];
-  onOpenAdjustment: (item: OrderItem) => void;
-  onOpenSettlement: () => void;
+  adjustments?: BillAdjustment[];
+  menuItems?: MenuItem[];
+  onAdjustItem?: (orderItemId: string, action: 'increase' | 'decrease' | 'delete') => Promise<void>;
+  onAddDish?: (menuItemId: string) => Promise<void>;
+  onOpenAdjustment?: (item: OrderItem) => void;
+  onOpenSettlement?: () => void;
 }
 
 export const BillDetailModal: React.FC<BillDetailModalProps> = ({
@@ -20,13 +22,27 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
   bill,
   identifierTitle,
   orderItems,
-  adjustments,
-  onOpenAdjustment,
+  menuItems = [],
+  onAdjustItem,
+  onAddDish,
   onOpenSettlement,
 }) => {
+  const [isAdjusting, setIsAdjusting] = useState(false);
+  const [selectedMenuItemId, setSelectedMenuItemId] = useState('');
+
   if (!isOpen || !bill) return null;
 
   const isSettled = bill.status === 'settled';
+
+  // Only display items that have active quantity > 0
+  const activeItems = orderItems.filter(
+    (item) => item.ordered_quantity - item.cancelled_quantity > 0
+  );
+
+  const calculatedSubtotal = activeItems.reduce((acc, item) => {
+    const qty = item.ordered_quantity - item.cancelled_quantity;
+    return acc + qty * item.unit_price_paise;
+  }, 0);
 
   return (
     <div className="modal-overlay">
@@ -47,9 +63,6 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
             ) : (
               <span className="badge badge-pending">UNSETTLED RUNNING BILL</span>
             )}
-            <button type="button" className="btn-secondary btn-sm" onClick={onClose} style={{ padding: '2px 8px', fontSize: '11px' }}>
-              Close
-            </button>
           </div>
         </div>
 
@@ -60,8 +73,8 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
               ITEMIZED ORDERS
             </span>
 
-            {orderItems.length === 0 ? (
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No dishes ordered yet.</p>
+            {activeItems.length === 0 ? (
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No dishes on this bill.</p>
             ) : (
               <div className="table-responsive">
                 <table>
@@ -72,32 +85,51 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
                       <th style={{ textAlign: 'center' }}>Kitchen Prep</th>
                       <th style={{ textAlign: 'right' }}>Price</th>
                       <th style={{ textAlign: 'right' }}>Total</th>
-                      {!isSettled && <th style={{ textAlign: 'center' }}>Action</th>}
+                      {isAdjusting && <th style={{ textAlign: 'center' }}>Action</th>}
                     </tr>
                   </thead>
                   <tbody>
-                    {orderItems.map((item) => {
+                    {activeItems.map((item) => {
                       const activeQty = item.ordered_quantity - item.cancelled_quantity;
                       const lineTotal = activeQty * item.unit_price_paise;
                       return (
-                        <tr key={item.id} style={{ opacity: item.status === 'cancelled' ? 0.6 : 1 }}>
+                        <tr key={item.id}>
                           <td>
                             <div style={{ fontWeight: 600, fontSize: '12.5px' }}>{item.dish_name}</div>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.category_name}</div>
                           </td>
-                          <td style={{ textAlign: 'center', fontWeight: 600 }}>
-                            {activeQty}
-                            {item.cancelled_quantity > 0 && (
-                              <span style={{ fontSize: '10px', color: 'var(--danger)', display: 'block' }}>
-                                (-{item.cancelled_quantity} cancl)
-                              </span>
+                          <td style={{ textAlign: 'center' }}>
+                            {isAdjusting ? (
+                              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                                <button
+                                  type="button"
+                                  className="btn-secondary btn-sm"
+                                  style={{ width: '22px', height: '22px', padding: 0, fontWeight: 800, fontSize: '13px', lineHeight: '20px' }}
+                                  onClick={() => onAdjustItem?.(item.id, 'decrease')}
+                                  title="Decrease quantity"
+                                >
+                                  -
+                                </button>
+                                <span style={{ fontWeight: 700, minWidth: '18px', textAlign: 'center' }}>
+                                  {activeQty}
+                                </span>
+                                <button
+                                  type="button"
+                                  className="btn-secondary btn-sm"
+                                  style={{ width: '22px', height: '22px', padding: 0, fontWeight: 800, fontSize: '13px', lineHeight: '20px' }}
+                                  onClick={() => onAdjustItem?.(item.id, 'increase')}
+                                  title="Increase quantity"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            ) : (
+                              <span style={{ fontWeight: 600 }}>{activeQty}</span>
                             )}
                           </td>
                           <td style={{ textAlign: 'center' }}>
                             {item.prepared_quantity >= activeQty && activeQty > 0 ? (
                               <span className="badge badge-ready" style={{ fontSize: '10px' }}>Ready</span>
-                            ) : item.cancelled_quantity === item.ordered_quantity ? (
-                              <span className="badge badge-danger" style={{ fontSize: '10px' }}>Cancelled</span>
                             ) : (
                               <span className="badge badge-pending" style={{ fontSize: '10px' }}>
                                 {item.prepared_quantity}/{activeQty} Prep
@@ -106,18 +138,16 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
                           </td>
                           <td style={{ textAlign: 'right', fontSize: '12px' }}>{formatPaiseToINR(item.unit_price_paise)}</td>
                           <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '12.5px' }}>{formatPaiseToINR(lineTotal)}</td>
-                          {!isSettled && (
+                          {isAdjusting && (
                             <td style={{ textAlign: 'center' }}>
-                              {activeQty > 0 && (
-                                <button
-                                  type="button"
-                                  className="btn-secondary btn-sm"
-                                  style={{ fontSize: '10.5px', padding: '2px 6px' }}
-                                  onClick={() => onOpenAdjustment(item)}
-                                >
-                                  Adjust
-                                </button>
-                              )}
+                              <button
+                                type="button"
+                                className="btn-danger btn-sm"
+                                style={{ fontSize: '10.5px', padding: '2px 8px' }}
+                                onClick={() => onAdjustItem?.(item.id, 'delete')}
+                              >
+                                Remove
+                              </button>
                             </td>
                           )}
                         </tr>
@@ -127,47 +157,70 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
                 </table>
               </div>
             )}
-          </div>
 
-          {/* Adjustments Section */}
-          {adjustments.length > 0 && (
-            <div style={{ marginBottom: '12px', backgroundColor: 'var(--bg-surface-subtle)', padding: '8px 10px', borderRadius: '5px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                RECORDED ADJUSTMENTS & RETURNS
-              </span>
-              {adjustments.map((adj) => (
-                <div key={adj.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', padding: '2px 0' }}>
-                  <div>
-                    <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>
-                      {adj.adjustment_type.replace(/_/g, ' ')}
-                    </span>
-                    <span style={{ color: 'var(--text-muted)', marginLeft: '6px' }}>
-                      ({adj.reason} by {adj.authorized_by_staff_id})
-                    </span>
-                  </div>
-                  <strong style={{ color: 'var(--danger)' }}>
-                    {formatPaiseToINR(adj.amount_paise)}
-                  </strong>
-                </div>
-              ))}
-            </div>
-          )}
+            {/* Add Dish Selector when in adjusting mode */}
+            {isAdjusting && menuItems.length > 0 && (
+              <div
+                style={{
+                  marginTop: '10px',
+                  padding: '8px 10px',
+                  backgroundColor: 'var(--bg-surface-subtle)',
+                  borderRadius: '5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                  ADD DISH:
+                </span>
+                <select
+                  value={selectedMenuItemId}
+                  onChange={(e) => setSelectedMenuItemId(e.target.value)}
+                  style={{ flex: 1, minHeight: '28px', fontSize: '12px', padding: '2px 6px' }}
+                >
+                  <option value="">Select dish to add...</option>
+                  {menuItems
+                    .filter((m) => m.is_available && !m.is_archived)
+                    .map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} ({formatPaiseToINR(m.price_paise)})
+                      </option>
+                    ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn-primary btn-sm"
+                  disabled={!selectedMenuItemId}
+                  style={{ fontSize: '11px', padding: '4px 10px', fontWeight: 600, whiteSpace: 'nowrap' }}
+                  onClick={() => {
+                    if (selectedMenuItemId && onAddDish) {
+                      onAddDish(selectedMenuItemId);
+                      setSelectedMenuItemId('');
+                    }
+                  }}
+                >
+                  + Add to Bill
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Totals Summary */}
           <div style={{ borderTop: '1px solid var(--border-strong)', paddingTop: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', fontSize: '12px' }}>
               <span style={{ color: 'var(--text-secondary)' }}>Gross Subtotal:</span>
-              <span>{formatPaiseToINR(bill.subtotal_paise)}</span>
+              <span>{formatPaiseToINR(calculatedSubtotal)}</span>
             </div>
             {bill.adjustments_paise !== 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', fontSize: '12px', color: 'var(--danger)' }}>
-                <span>Adjustments / Returns:</span>
-                <span>{formatPaiseToINR(bill.adjustments_paise)}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', fontSize: '12px', color: bill.adjustments_paise < 0 ? 'var(--danger)' : 'var(--text-secondary)' }}>
+                <span>Adjustments:</span>
+                <span>{bill.adjustments_paise < 0 ? `- ${formatPaiseToINR(Math.abs(bill.adjustments_paise))}` : `+ ${formatPaiseToINR(bill.adjustments_paise)}`}</span>
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '15px', marginTop: '4px' }}>
               <span>Final Total Due:</span>
-              <span style={{ color: 'var(--text-primary)' }}>{formatPaiseToINR(bill.final_total_paise)}</span>
+              <span style={{ color: 'var(--text-primary)' }}>{formatPaiseToINR(Math.max(0, calculatedSubtotal + (bill.adjustments_paise || 0)))}</span>
             </div>
           </div>
 
@@ -181,27 +234,51 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
         </div>
 
         <div className="modal-footer" style={{ padding: '8px 14px' }}>
-          <button
-            type="button"
-            className="btn-primary btn-sm"
-            style={{ backgroundColor: 'var(--primary-action)', borderColor: 'var(--primary-action)', color: '#FFFFFF', fontWeight: 700 }}
-            onClick={() => window.print()}
-          >
-            <span>Print Bill</span>
-          </button>
-          {!isSettled && (
-            <button
-              type="button"
-              className="btn-success btn-sm"
-              style={{ fontWeight: 700 }}
-              onClick={onOpenSettlement}
-            >
-              Collect & Settle Bill
-            </button>
+          {isAdjusting ? (
+            <>
+              <button
+                type="button"
+                className="btn-success btn-sm"
+                style={{ fontWeight: 700 }}
+                onClick={() => setIsAdjusting(false)}
+              >
+                Done Adjusting
+              </button>
+              <button type="button" className="btn-secondary btn-sm" onClick={onClose}>
+                Close
+              </button>
+            </>
+          ) : (
+            <>
+              {!isSettled && (
+                <>
+                  {onOpenSettlement && (
+                    <button
+                      type="button"
+                      className="btn-success btn-sm"
+                      style={{ fontWeight: 700 }}
+                      onClick={onOpenSettlement}
+                    >
+                      Collect & Settle Bill
+                    </button>
+                  )}
+                  {onAdjustItem && (
+                    <button
+                      type="button"
+                      className="btn-secondary btn-sm"
+                      style={{ fontWeight: 600 }}
+                      onClick={() => setIsAdjusting(true)}
+                    >
+                      Adjust Bill
+                    </button>
+                  )}
+                </>
+              )}
+              <button type="button" className="btn-secondary btn-sm" onClick={onClose}>
+                Close
+              </button>
+            </>
           )}
-          <button type="button" className="btn-secondary btn-sm" onClick={onClose}>
-            Close
-          </button>
         </div>
       </div>
     </div>

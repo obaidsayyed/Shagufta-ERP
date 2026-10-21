@@ -772,4 +772,157 @@ describe('Hotel Order Management System — Comprehensive Operational Tests', ()
     expect(unreadyRoti.prepared_quantity).toBe(0);
     expect(unreadyRoti.status).toBe('pending');
   });
+
+  // TEST 15 — Bill Adjustment directly modifies items, quantities and totals without printing messages
+  it('Test 15: Bill Adjustment increases, decreases, removes and adds dishes directly with accurate totals', () => {
+    const table = mockDb.getTables()[0];
+    const menuItems = mockDb.getMenuItems();
+    const roti = menuItems.find((m) => m.name === 'Butter Roti')!;
+    const paneer = menuItems.find((m) => m.name === 'Paneer Butter Masala')!;
+    const dal = menuItems.find((m) => m.name === 'Dal Tadka')!;
+
+    // 1. Submit initial order: 2 rotis and 1 paneer
+    const orderRes = mockDb.rpcSubmitOrder({
+      order_type: 'dine_in',
+      table_id: table.id,
+      items: [
+        { menu_item_id: roti.id, quantity: 2 },
+        { menu_item_id: paneer.id, quantity: 1 },
+      ],
+      caller_staff: waiterStaff,
+    });
+
+    const bill = mockDb.getBills().find((b) => b.table_session_id === orderRes.table_session_id)!;
+    expect(bill).toBeDefined();
+    const initialExpectedTotal = (roti.price_paise * 2) + paneer.price_paise;
+    expect(bill.final_total_paise).toBe(initialExpectedTotal);
+
+    const items = mockDb.getOrderItems().filter((oi) => oi.table_session_id === orderRes.table_session_id);
+    const rotiItem = items.find((oi) => oi.menu_item_id === roti.id)!;
+    const paneerItem = items.find((oi) => oi.menu_item_id === paneer.id)!;
+
+    // 2. Increase roti quantity from 2 to 3
+    const adjustRes1 = mockDb.rpcAdjustBillItem({
+      bill_id: bill.id,
+      order_item_id: rotiItem.id,
+      action: 'increase',
+      caller_staff: adminStaff,
+    });
+    expect(adjustRes1.status).toBe('success');
+    expect(adjustRes1.bill.final_total_paise).toBe((roti.price_paise * 3) + paneer.price_paise);
+
+    // 3. Decrease roti quantity from 3 to 2
+    const adjustRes2 = mockDb.rpcAdjustBillItem({
+      bill_id: bill.id,
+      order_item_id: rotiItem.id,
+      action: 'decrease',
+      caller_staff: adminStaff,
+    });
+    expect(adjustRes2.status).toBe('success');
+    expect(adjustRes2.bill.final_total_paise).toBe((roti.price_paise * 2) + paneer.price_paise);
+
+    // 4. Delete paneer item
+    const adjustRes3 = mockDb.rpcAdjustBillItem({
+      bill_id: bill.id,
+      order_item_id: paneerItem.id,
+      action: 'delete',
+      caller_staff: adminStaff,
+    });
+    expect(adjustRes3.status).toBe('success');
+    expect(adjustRes3.bill.final_total_paise).toBe(roti.price_paise * 2);
+    expect(adjustRes3.order_items.some((oi) => oi.id === paneerItem.id)).toBe(false);
+
+    // 5. Add Dal Tadka to the bill
+    const addRes = mockDb.rpcAddDishToBill({
+      bill_id: bill.id,
+      menu_item_id: dal.id,
+      caller_staff: adminStaff,
+    });
+    expect(addRes.status).toBe('success');
+    expect(addRes.bill.final_total_paise).toBe((roti.price_paise * 2) + dal.price_paise);
+    expect(addRes.order_items.some((oi) => oi.menu_item_id === dal.id)).toBe(true);
+
+    // 6. Settle the bill and verify payment final total matches
+    const settleRes = mockDb.rpcSettleBill({
+      bill_id: bill.id,
+      payment_method: 'online',
+      caller_staff: adminStaff,
+    });
+    expect(settleRes.status).toBe('success');
+    expect(settleRes.final_total_paise).toBe((roti.price_paise * 2) + dal.price_paise);
+  });
+
+  // TEST 16 — Parcel Bill Adjustment (Takeaway parcel items increased, decreased, removed and added directly)
+  it('Test 16: Parcel Bill adjustments and dish additions for takeaway orders', () => {
+    const biryani = mockDb.getMenuItems().find((m) => m.name === 'Veg Biryani')!;
+    const naan = mockDb.getMenuItems().find((m) => m.name === 'Butter Naan')!;
+
+    // 1. Submit parcel order
+    const parcelOrder = mockDb.rpcSubmitOrder({
+      order_type: 'parcel',
+      parcel_customer_notes: 'Spicy parcel',
+      items: [{ menu_item_id: biryani.id, quantity: 2 }],
+      caller_staff: adminStaff,
+    });
+    expect(parcelOrder.status).toBe('success');
+    expect(parcelOrder.parcel_id).toBeDefined();
+
+    const bills = mockDb.getBills();
+    const parcelBill = bills.find((b) => b.parcel_id === parcelOrder.parcel_id)!;
+    expect(parcelBill).toBeDefined();
+    expect(parcelBill.subtotal_paise).toBe(biryani.price_paise * 2);
+
+    const items = mockDb.getOrderItems().filter((oi) => oi.parcel_id === parcelOrder.parcel_id);
+    const biryaniItem = items.find((oi) => oi.menu_item_id === biryani.id)!;
+
+    // 2. Increase parcel item quantity
+    const incRes = mockDb.rpcAdjustBillItem({
+      bill_id: parcelBill.id,
+      order_item_id: biryaniItem.id,
+      action: 'increase',
+      caller_staff: adminStaff,
+    });
+    expect(incRes.status).toBe('success');
+    expect(incRes.bill.subtotal_paise).toBe(biryani.price_paise * 3);
+
+    // 3. Add Butter Naan directly to parcel bill
+    const addRes = mockDb.rpcAddDishToBill({
+      bill_id: parcelBill.id,
+      menu_item_id: naan.id,
+      caller_staff: adminStaff,
+    });
+    expect(addRes.status).toBe('success');
+    expect(addRes.bill.subtotal_paise).toBe((biryani.price_paise * 3) + naan.price_paise);
+
+    // 4. Decrease parcel item quantity
+    const decRes = mockDb.rpcAdjustBillItem({
+      bill_id: parcelBill.id,
+      order_item_id: biryaniItem.id,
+      action: 'decrease',
+      caller_staff: adminStaff,
+    });
+    expect(decRes.status).toBe('success');
+    expect(decRes.bill.subtotal_paise).toBe((biryani.price_paise * 2) + naan.price_paise);
+
+    // 5. Delete Butter Naan from parcel bill
+    const freshItems = mockDb.getOrderItems().filter((oi) => oi.parcel_id === parcelOrder.parcel_id);
+    const naanItem = freshItems.find((oi) => oi.menu_item_id === naan.id)!;
+    const delRes = mockDb.rpcAdjustBillItem({
+      bill_id: parcelBill.id,
+      order_item_id: naanItem.id,
+      action: 'delete',
+      caller_staff: adminStaff,
+    });
+    expect(delRes.status).toBe('success');
+    expect(delRes.bill.subtotal_paise).toBe(biryani.price_paise * 2);
+
+    // 6. Settle parcel bill
+    const settleRes = mockDb.rpcSettleBill({
+      bill_id: parcelBill.id,
+      payment_method: 'online',
+      caller_staff: adminStaff,
+    });
+    expect(settleRes.status).toBe('success');
+    expect(settleRes.final_total_paise).toBe(biryani.price_paise * 2);
+  });
 });

@@ -4,11 +4,16 @@ import { kitchenSound } from '../lib/sound';
 interface SoundContextType {
   audioUnlocked: boolean;
   soundEnabled: boolean;
+  isRinging: boolean;
   unlockAudio: () => Promise<boolean>;
   setSoundEnabled: (enabled: boolean) => void;
+  playKitchenOrderRing: () => Promise<void>;
   playNewOrderChime: () => Promise<void>;
+  stopRing: () => void;
+  startKitchenBackgroundKeepAlive: () => Promise<void>;
+  stopKitchenBackgroundKeepAlive: () => void;
   registerInitialOrders: (orderIds: string[]) => void;
-  notifyIfNewOrder: (orderId: string) => Promise<boolean>;
+  notifyIfNewOrder: (orderId: string, ticketNumber?: string) => Promise<boolean>;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
@@ -16,6 +21,7 @@ const SoundContext = createContext<SoundContextType | undefined>(undefined);
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [audioUnlocked, setAudioUnlocked] = useState(false);
   const [soundEnabled, setSoundEnabledState] = useState(kitchenSound.getStatus().enabled);
+  const [isRinging, setIsRinging] = useState(false);
   const seenOrderIdsRef = useRef<Set<string>>(new Set());
   const isInitializedRef = useRef(false);
 
@@ -24,6 +30,14 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const status = kitchenSound.getStatus();
     setAudioUnlocked(status.unlocked);
     setSoundEnabledState(status.enabled);
+    setIsRinging(status.isRinging);
+
+    // Subscribe to ringing state changes
+    const unsub = kitchenSound.subscribeRingState((ringing) => {
+      setIsRinging(ringing);
+    });
+
+    return () => unsub();
   }, []);
 
   const unlockAudio = async (): Promise<boolean> => {
@@ -37,15 +51,35 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setSoundEnabledState(enabled);
   };
 
+  const stopRing = () => {
+    kitchenSound.stopRing();
+  };
+
+  const playKitchenOrderRing = async () => {
+    await kitchenSound.playKitchenOrderRing();
+  };
+
+  const playNewOrderChime = async () => {
+    await kitchenSound.playKitchenOrderRing();
+  };
+
+  const startKitchenBackgroundKeepAlive = async () => {
+    await kitchenSound.startKitchenBackgroundKeepAlive();
+  };
+
+  const stopKitchenBackgroundKeepAlive = () => {
+    kitchenSound.stopKitchenBackgroundKeepAlive();
+  };
+
   // Pre-seed known orders on initial load to avoid playing sound for existing history
   const registerInitialOrders = (orderIds: string[]) => {
     orderIds.forEach((id) => seenOrderIdsRef.current.add(id));
     isInitializedRef.current = true;
   };
 
-  // Only chimes if the order ticket has NEVER been seen by this client before
-  const notifyIfNewOrder = async (orderId: string): Promise<boolean> => {
-    // If not initialized yet, don't trigger chime on startup race
+  // Rings for exactly 5 seconds if order ticket has NEVER been seen by this client before
+  const notifyIfNewOrder = async (orderId: string, ticketNumber?: string): Promise<boolean> => {
+    // If not initialized yet, don't trigger alert on startup race
     if (!isInitializedRef.current) {
       seenOrderIdsRef.current.add(orderId);
       return false;
@@ -56,14 +90,30 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return false;
     }
 
-    // Genuinely new ticket: register and chime
+    // Genuinely new ticket: register and ring
     seenOrderIdsRef.current.add(orderId);
-    await kitchenSound.playNewOrderChime();
-    return true;
-  };
+    await kitchenSound.playKitchenOrderRing();
 
-  const playNewOrderChime = async () => {
-    await kitchenSound.playNewOrderChime();
+    // Trigger system notification if screen is locked or tab is hidden
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        const title = `🚨 NEW KITCHEN ORDER: ${ticketNumber || 'Ticket'}`;
+        const notif = new Notification(title, {
+          body: 'A new order was just sent to the kitchen queue.',
+          icon: '/favicon.svg',
+          tag: 'kitchen-new-order',
+          requireInteraction: true,
+        });
+        notif.onclick = () => {
+          window.focus();
+          notif.close();
+        };
+      } catch (err) {
+        console.warn('Notification display failed:', err);
+      }
+    }
+
+    return true;
   };
 
   return (
@@ -71,9 +121,14 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         audioUnlocked,
         soundEnabled,
+        isRinging,
         unlockAudio,
         setSoundEnabled,
+        playKitchenOrderRing,
         playNewOrderChime,
+        stopRing,
+        startKitchenBackgroundKeepAlive,
+        stopKitchenBackgroundKeepAlive,
         registerInitialOrders,
         notifyIfNewOrder,
       }}

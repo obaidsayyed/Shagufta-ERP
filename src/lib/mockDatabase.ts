@@ -1,20 +1,20 @@
 // High-fidelity Mock Transactional Database Engine
 // Implements the exact same tables, constraints, RPCs, and Realtime events as the PostgreSQL schema
 
-import { 
-  StaffProfile, 
-  MenuCategory, 
-  MenuItem, 
-  DiningTable, 
-  TableSession, 
-  ParcelOrder, 
-  OrderTicket, 
-  OrderItem, 
-  Bill, 
-  BillAdjustment, 
-  AuditLog, 
-  AdjustmentType, 
-  PaymentMethod 
+import {
+  StaffProfile,
+  MenuCategory,
+  MenuItem,
+  DiningTable,
+  TableSession,
+  ParcelOrder,
+  OrderTicket,
+  OrderItem,
+  Bill,
+  BillAdjustment,
+  AuditLog,
+  AdjustmentType,
+  PaymentMethod
 } from '../types/database';
 
 type RealtimeListener = (event: string, payload: unknown) => void;
@@ -103,13 +103,13 @@ class MockDatabase {
   private seedDefaults() {
     const now = new Date().toISOString();
 
-    // Default Staff
+    // Staff profiles matching live authentic system
     this.staffProfiles = [
       {
         id: 's0000000-0000-0000-0000-000000000001',
         auth_user_id: 'u0000000-0000-0000-0000-000000000001',
-        staff_id: 'ADM-001',
-        display_name: 'Arun Verma (Admin)',
+        staff_id: 'Admin123',
+        display_name: 'Obaid',
         role: 'admin',
         is_active: true,
         created_at: now,
@@ -118,21 +118,21 @@ class MockDatabase {
         id: 's0000000-0000-0000-0000-000000000002',
         auth_user_id: 'u0000000-0000-0000-0000-000000000002',
         staff_id: 'WTR-101',
-        display_name: 'Ramesh Kumar (Waiter)',
+        display_name: 'Waiter 1',
         role: 'waiter',
         is_active: true,
         created_at: now,
-        created_by_staff_id: 'ADM-001',
+        created_by_staff_id: 'Admin123',
       },
       {
         id: 's0000000-0000-0000-0000-000000000003',
         auth_user_id: 'u0000000-0000-0000-0000-000000000003',
         staff_id: 'CHF-201',
-        display_name: 'Chef Sanjeev (Kitchen)',
+        display_name: 'Chef 1',
         role: 'chef',
         is_active: true,
         created_at: now,
-        created_by_staff_id: 'ADM-001',
+        created_by_staff_id: 'Admin123',
       },
     ];
 
@@ -415,8 +415,8 @@ class MockDatabase {
         targetTable = c2Table;
       }
 
-      const displayTableNumber = custNum === 2 
-        ? (targetTable.table_number.includes('(2)') ? targetTable.table_number : `${targetTable.table_number} (2)`) 
+      const displayTableNumber = custNum === 2
+        ? (targetTable.table_number.includes('(2)') ? targetTable.table_number : `${targetTable.table_number} (2)`)
         : baseTable.table_number;
 
       // Find active open sessions for this physical table (Customer 1 slot vs Customer 2 slot)
@@ -597,7 +597,7 @@ class MockDatabase {
     if (!bill) return;
 
     let subtotal = 0;
-    const items = this.orderItems.filter((oi) => 
+    const items = this.orderItems.filter((oi) =>
       (bill.table_session_id && oi.table_session_id === bill.table_session_id) ||
       (bill.parcel_id && oi.parcel_id === bill.parcel_id)
     );
@@ -644,7 +644,7 @@ class MockDatabase {
     // Match pending order items for this dish belonging to this session or parcel, oldest first
     const pendingItems = this.orderItems.filter((oi) => {
       const targetMatch = (table_session_id && oi.table_session_id === table_session_id) ||
-                          (parcel_id && oi.parcel_id === parcel_id);
+        (parcel_id && oi.parcel_id === parcel_id);
       return targetMatch && oi.menu_item_id === menu_item_id && (oi.prepared_quantity + oi.cancelled_quantity < oi.ordered_quantity);
     }).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
@@ -703,7 +703,7 @@ class MockDatabase {
     const item = this.orderItems.find((oi) => oi.id === order_item_id);
     if (!item) throw new Error('Order item not found');
 
-    const bill = this.bills.find((b) => 
+    const bill = this.bills.find((b) =>
       (item.table_session_id && b.table_session_id === item.table_session_id) ||
       (item.parcel_id && b.parcel_id === item.parcel_id)
     );
@@ -766,6 +766,135 @@ class MockDatabase {
     this.emit('BILL_UPDATED', { bill_id: bill.id });
 
     return { status: 'success', deduction_paise };
+  }
+
+  // RPC: Direct Bill Item Adjustment (Increase, Decrease, Delete)
+  public rpcAdjustBillItem(params: {
+    bill_id: string;
+    order_item_id: string;
+    action: 'increase' | 'decrease' | 'delete';
+    caller_staff?: StaffProfile;
+  }): { status: string; bill: Bill; order_items: OrderItem[] } {
+    const { bill_id, order_item_id, action } = params;
+
+    const bill = this.bills.find((b) => b.id === bill_id);
+    if (!bill) throw new Error('Bill not found');
+
+    const itemIndex = this.orderItems.findIndex((oi) => oi.id === order_item_id);
+    if (itemIndex === -1) throw new Error('Order item not found');
+
+    const item = this.orderItems[itemIndex];
+
+    if (action === 'increase') {
+      item.ordered_quantity += 1;
+      item.cancelled_quantity = 0;
+      if (item.status === 'cancelled') {
+        item.status = 'ready';
+      }
+    } else if (action === 'decrease') {
+      const activeQty = item.ordered_quantity - item.cancelled_quantity;
+      if (activeQty <= 1) {
+        this.orderItems.splice(itemIndex, 1);
+      } else {
+        item.ordered_quantity = activeQty - 1;
+        item.cancelled_quantity = 0;
+        if (item.prepared_quantity > item.ordered_quantity) {
+          item.prepared_quantity = item.ordered_quantity;
+        }
+      }
+    } else if (action === 'delete') {
+      this.orderItems.splice(itemIndex, 1);
+    }
+
+    this.recalculateBill(bill.id);
+    this.saveToStorage();
+    this.emit('BILL_UPDATED', { bill_id: bill.id });
+
+    const activeBillItems = this.orderItems.filter((oi) =>
+      (bill.table_session_id && oi.table_session_id === bill.table_session_id) ||
+      (bill.parcel_id && oi.parcel_id === bill.parcel_id)
+    );
+
+    return { status: 'success', bill, order_items: activeBillItems };
+  }
+
+  // RPC: Add a Dish directly to an unsettled Bill
+  public rpcAddDishToBill(params: {
+    bill_id: string;
+    menu_item_id: string;
+    caller_staff?: StaffProfile;
+  }): { status: string; bill: Bill; order_items: OrderItem[] } {
+    const { bill_id, menu_item_id, caller_staff } = params;
+
+    const bill = this.bills.find((b) => b.id === bill_id);
+    if (!bill) throw new Error('Bill not found');
+
+    const menuItem = this.menuItems.find((m) => m.id === menu_item_id);
+    if (!menuItem) throw new Error('Menu item not found');
+
+    const category = this.menuCategories.find((c) => c.id === menuItem.category_id);
+
+    const existingItem = this.orderItems.find((oi) =>
+      oi.menu_item_id === menu_item_id &&
+      ((bill.table_session_id && oi.table_session_id === bill.table_session_id) ||
+       (bill.parcel_id && oi.parcel_id === bill.parcel_id))
+    );
+
+    if (existingItem) {
+      existingItem.ordered_quantity = (existingItem.ordered_quantity - existingItem.cancelled_quantity) + 1;
+      existingItem.cancelled_quantity = 0;
+      if (existingItem.status === 'cancelled') {
+        existingItem.status = 'ready';
+      }
+    } else {
+      let orderTicket = this.orders.find((o) =>
+        (bill.table_session_id && o.table_session_id === bill.table_session_id) ||
+        (bill.parcel_id && o.parcel_id === bill.parcel_id)
+      );
+
+      const now = new Date().toISOString();
+      if (!orderTicket) {
+        orderTicket = {
+          id: `ord-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          ticket_number: `TKT-${Date.now().toString().slice(-4)}`,
+          order_type: bill.table_session_id ? 'dine_in' : 'parcel',
+          table_session_id: bill.table_session_id,
+          parcel_id: bill.parcel_id,
+          status: 'ready',
+          created_by_staff_id: caller_staff?.staff_id || 'ADM-001',
+          created_at: now,
+        };
+        this.orders.push(orderTicket);
+      }
+
+      const newItem: OrderItem = {
+        id: `oi-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        order_id: orderTicket.id,
+        table_session_id: bill.table_session_id,
+        parcel_id: bill.parcel_id,
+        menu_item_id: menuItem.id,
+        dish_name: menuItem.name,
+        category_name: category ? category.name : 'General',
+        unit_price_paise: menuItem.price_paise,
+        ordered_quantity: 1,
+        prepared_quantity: 1,
+        cancelled_quantity: 0,
+        status: 'ready',
+        created_at: now,
+      };
+      this.orderItems.push(newItem);
+    }
+
+    this.recalculateBill(bill.id);
+    this.saveToStorage();
+    this.emit('BILL_UPDATED', { bill_id: bill.id });
+
+    const activeBillItems = this.orderItems.filter((oi) =>
+      (bill.table_session_id && oi.table_session_id === bill.table_session_id) ||
+      (bill.parcel_id && oi.parcel_id === bill.parcel_id)
+    );
+
+    return { status: 'success', bill, order_items: activeBillItems };
   }
 
   // RPC: Settle Bill (Atomic settlement, records payment, closes session)

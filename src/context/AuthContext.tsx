@@ -109,46 +109,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: true };
         }
 
-        // If default Admin credentials and live auth failed or user not yet in live auth
-        if (cleanId.toLowerCase() === 'admin123' && pass === 'Admin@123') {
-          const all = mockDb.getStaffProfiles();
-          let admin = all.find((s) => s.role === 'admin' && s.is_active);
-          if (!admin) {
-            admin = mockDb.createStaffProfile({
-              staff_id: 'Admin123',
-              display_name: 'Administrator',
-              role: 'admin',
-              caller_admin_id: 'SYSTEM',
-            });
-          }
-          setCurrentStaff(admin);
-          localStorage.setItem('hotel_erp_active_staff_id', admin.staff_id);
-          return { success: true };
-        }
-
         return { success: false, error: error?.message || 'Invalid username or password' };
       } catch (err) {
         console.warn('Supabase signInWithPassword exception:', err);
-        if (cleanId.toLowerCase() === 'admin123' && pass === 'Admin@123') {
-          const all = mockDb.getStaffProfiles();
-          let admin = all.find((s) => s.role === 'admin' && s.is_active);
-          if (!admin) {
-            admin = mockDb.createStaffProfile({
-              staff_id: 'Admin123',
-              display_name: 'Administrator',
-              role: 'admin',
-              caller_admin_id: 'SYSTEM',
-            });
-          }
-          setCurrentStaff(admin);
-          localStorage.setItem('hotel_erp_active_staff_id', admin.staff_id);
-          return { success: true };
-        }
         return { success: false, error: 'Network issue contacting authentication service. Please retry.' };
       }
     }
 
-    // Mock environment login
+    // Offline / Local environment login
     const all = mockDb.getStaffProfiles();
     const match = all.find(
       (s) => (s.staff_id.toLowerCase() === cleanId.toLowerCase() || s.display_name.toLowerCase() === cleanId.toLowerCase())
@@ -160,22 +128,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setCurrentStaff(match);
       localStorage.setItem('hotel_erp_active_staff_id', match.staff_id);
-      return { success: true };
-    }
-
-    // Support Admin123 default in mock mode
-    if (cleanId.toLowerCase() === 'admin123' && pass === 'Admin@123') {
-      let admin = all.find((s) => s.role === 'admin' && s.is_active);
-      if (!admin) {
-        admin = mockDb.createStaffProfile({
-          staff_id: 'Admin123',
-          display_name: 'Administrator',
-          role: 'admin',
-          caller_admin_id: 'SYSTEM',
-        });
-      }
-      setCurrentStaff(admin);
-      localStorage.setItem('hotel_erp_active_staff_id', admin.staff_id);
       return { success: true };
     }
 

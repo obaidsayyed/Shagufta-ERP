@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
-import { 
-  DiningTable, 
-  TableSession, 
-  ParcelOrder, 
-  OrderTicket, 
-  OrderItem, 
-  Bill, 
-  BillAdjustment, 
-  MenuItem, 
+import {
+  DiningTable,
+  TableSession,
+  ParcelOrder,
+  OrderTicket,
+  OrderItem,
+  Bill,
+  BillAdjustment,
+  MenuItem,
   MenuCategory,
   StaffProfile
 } from '../../types/database';
@@ -33,6 +34,7 @@ export const CounterView: React.FC<CounterViewProps> = ({
   activeTab: externalTab,
   setActiveTab: externalSetTab,
 }) => {
+  const { currentStaff } = useAuth();
   const [internalTab, setInternalTab] = useState<'sessions' | 'history' | 'menu' | 'tables' | 'staff' | 'analytics'>('sessions');
   const activeTab = externalTab ?? internalTab;
   const setActiveTab = externalSetTab ?? setInternalTab;
@@ -79,6 +81,12 @@ export const CounterView: React.FC<CounterViewProps> = ({
       setMenuItems(mList);
       setCategories(cList);
       setStaffList(stList);
+
+      setSelectedBillForDetail((prev) => {
+        if (!prev) return null;
+        const freshBill = bList.find((b) => b.id === prev.bill.id);
+        return freshBill ? { ...prev, bill: freshBill } : prev;
+      });
     } catch (err: unknown) {
       console.error('Error refreshing counter admin data:', err);
     }
@@ -103,18 +111,50 @@ export const CounterView: React.FC<CounterViewProps> = ({
     setItemToAdjust(item);
   };
 
+  const handleAdjustItem = async (orderItemId: string, action: 'increase' | 'decrease' | 'delete') => {
+    const actingStaff = currentStaff || staffList.find((s) => s.role === 'admin' && s.is_active);
+    if (!actingStaff || !selectedBillForDetail) return;
+    try {
+      await api.adjustBillItem({
+        bill_id: selectedBillForDetail.bill.id,
+        order_item_id: orderItemId,
+        action,
+        caller_staff: actingStaff,
+      });
+      await loadData();
+    } catch (err: unknown) {
+      console.error('Failed to adjust bill item:', err);
+    }
+  };
+
+  const handleAddDishToBill = async (menuItemId: string) => {
+    const actingStaff = currentStaff || staffList.find((s) => s.role === 'admin' && s.is_active);
+    if (!actingStaff || !selectedBillForDetail) return;
+    try {
+      await api.addDishToBill({
+        bill_id: selectedBillForDetail.bill.id,
+        menu_item_id: menuItemId,
+        caller_staff: actingStaff,
+      });
+      await loadData();
+    } catch (err: unknown) {
+      console.error('Failed to add dish to bill:', err);
+    }
+  };
+
   const handleOpenSettlement = () => {
     if (selectedBillForDetail) {
-      setBillToSettle({ bill: selectedBillForDetail.bill, title: selectedBillForDetail.title });
+      const freshBill = bills.find((b) => b.id === selectedBillForDetail.bill.id) || selectedBillForDetail.bill;
+      setBillToSettle({ bill: freshBill, title: selectedBillForDetail.title });
       setSelectedBillForDetail(null);
     }
   };
 
   const activeBillItems = selectedBillForDetail
-    ? orderItems.filter((oi) => 
-        (selectedBillForDetail.bill.table_session_id && oi.table_session_id === selectedBillForDetail.bill.table_session_id) ||
-        (selectedBillForDetail.bill.parcel_id && oi.parcel_id === selectedBillForDetail.bill.parcel_id)
-      )
+    ? orderItems.filter((oi) =>
+      (selectedBillForDetail.bill.table_session_id && oi.table_session_id === selectedBillForDetail.bill.table_session_id) ||
+      (selectedBillForDetail.bill.parcel_id && oi.parcel_id === selectedBillForDetail.bill.parcel_id)
+    )
     : [];
 
   const activeBillAdjustments = selectedBillForDetail
@@ -192,8 +232,9 @@ export const CounterView: React.FC<CounterViewProps> = ({
           bill={selectedBillForDetail.bill}
           identifierTitle={selectedBillForDetail.title}
           orderItems={activeBillItems}
-          adjustments={activeBillAdjustments}
-          onOpenAdjustment={handleOpenAdjustment}
+          menuItems={menuItems}
+          onAdjustItem={handleAdjustItem}
+          onAddDish={handleAddDishToBill}
           onOpenSettlement={handleOpenSettlement}
         />
       )}
