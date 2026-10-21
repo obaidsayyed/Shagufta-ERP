@@ -99,9 +99,12 @@ export const KitchenView: React.FC = () => {
       if (isInitialLoad) {
         // Register initial orders so they never trigger audible alerts
         registerInitialOrders(oList.map((o) => o.id));
+      } else {
+        // Ring for any newly arrived orders not yet rung
+        for (const ord of oList) {
+          await notifyIfNewOrder(ord.id, ord.ticket_number);
+        }
       }
-
-
 
       // Compute grouped preparation items with table sessions
       const groups = api.getKitchenPreparationGroups(oList, oiList, tList, pList, sList);
@@ -114,20 +117,57 @@ export const KitchenView: React.FC = () => {
   useEffect(() => {
     loadData(true);
 
-    // Subscribe to Realtime events
+    // 1. Subscribe to Realtime events (postgres_changes and broadcast)
     const unsubscribe = api.subscribe(async (event, payload: unknown) => {
       if (event === 'NEW_ORDER') {
-        const data = payload as { order: OrderTicket };
-        if (data?.order?.id) {
-          // Trigger 5.0-second authentic kitchen ringtone
-          await notifyIfNewOrder(data.order.id, data.order.ticket_number);
+        const data = payload as { order?: OrderTicket; id?: string; ticket_number?: string };
+        const orderId = data?.order?.id || data?.id;
+        const ticketNumber = data?.order?.ticket_number || data?.ticket_number;
+        if (orderId) {
+          await notifyIfNewOrder(orderId, ticketNumber);
+        }
+      } else if (event === 'ORDERS_CHANGED') {
+        const changePayload = payload as { eventType?: string; new?: { id?: string; ticket_number?: string } };
+        if (changePayload?.eventType === 'INSERT' && changePayload.new?.id) {
+          await notifyIfNewOrder(changePayload.new.id, changePayload.new.ticket_number);
         }
       }
       loadData(false);
     });
 
-    return () => unsubscribe();
-  }, []);
+    // 2. High-reliability polling fallback: checks every 2.5s so kitchen rings
+    // even if WebSockets are in reconnect or network throttled
+    const pollInterval = window.setInterval(() => {
+      loadData(false);
+    }, 2500);
+
+    // 3. User gesture auto-unlock: first tap/click anywhere unlocks audio context
+    const unlockOnGesture = () => {
+      unlockAudio();
+    };
+    window.addEventListener('pointerdown', unlockOnGesture, { once: true });
+    window.addEventListener('keydown', unlockOnGesture, { once: true });
+
+    return () => {
+      unsubscribe();
+      window.clearInterval(pollInterval);
+      window.removeEventListener('pointerdown', unlockOnGesture);
+      window.removeEventListener('keydown', unlockOnGesture);
+    };
+  }, [notifyIfNewOrder, unlockAudio]);
+
+  const handleTestRing = async () => {
+    await unlockAudio();
+    await playKitchenOrderRing();
+  };
+
+  const handleToggleSound = async () => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    if (next) {
+      await unlockAudio();
+    }
+  };
 
   const handleMarkReady = async (group: KitchenPreparationGroup, qtyToReady: number) => {
     if (!currentStaff) return;
@@ -203,7 +243,7 @@ export const KitchenView: React.FC = () => {
               <button
                 type="button"
                 className={`btn-sm ${soundEnabled ? 'btn-secondary' : 'btn-danger'}`}
-                onClick={() => setSoundEnabled(!soundEnabled)}
+                onClick={handleToggleSound}
                 title={soundEnabled ? 'Mute Kitchen Alerts' : 'Unmute Kitchen Alerts'}
               >
                 {soundEnabled ? 'Sound: On' : 'Sound: Muted'}
@@ -213,7 +253,7 @@ export const KitchenView: React.FC = () => {
             <button
               type="button"
               className="btn-secondary btn-sm"
-              onClick={playKitchenOrderRing}
+              onClick={handleTestRing}
               title="Test the 5-second kitchen ringtone"
             >
               Test Ring (5s)

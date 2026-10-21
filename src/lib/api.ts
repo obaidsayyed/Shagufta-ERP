@@ -570,6 +570,22 @@ export const api = {
           p_idempotency_key: params.idempotency_key || null,
         });
         if (!error && data) {
+          // Broadcast instant alert to kitchen
+          try {
+            const bc = supabase.channel('hotel_realtime_channel');
+            bc.send({
+              type: 'broadcast',
+              event: 'NEW_ORDER',
+              payload: {
+                order: {
+                  id: data.order_id,
+                  ticket_number: data.ticket_number,
+                },
+              },
+            });
+          } catch (bcErr) {
+            logApiNotice('broadcast_new_order', bcErr);
+          }
           return data;
         }
         logApiNotice('rpc_submit_order', error?.message);
@@ -1034,10 +1050,18 @@ export const api = {
       try {
         const channel = supabase
           .channel('hotel_realtime_channel')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+            const newOrder = payload.new as OrderTicket;
+            listener('NEW_ORDER', { order: newOrder });
+            listener('ORDERS_CHANGED', payload);
+          })
           .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => listener('ORDERS_CHANGED', payload))
           .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, (payload) => listener('ORDER_ITEMS_CHANGED', payload))
           .on('postgres_changes', { event: '*', schema: 'public', table: 'table_sessions' }, (payload) => listener('SESSIONS_CHANGED', payload))
           .on('postgres_changes', { event: '*', schema: 'public', table: 'bills' }, (payload) => listener('BILLS_CHANGED', payload))
+          .on('broadcast', { event: 'NEW_ORDER' }, (payload) => {
+            listener('NEW_ORDER', payload.payload);
+          })
           .subscribe((status, err) => {
             if (err) logApiNotice('subscribe_event', err);
           });

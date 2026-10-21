@@ -120,25 +120,25 @@ class SoundManager {
       masterGain.gain.setValueAtTime(0.85, now);
       masterGain.connect(ctx.destination);
 
-      // Resonant dual-tone bell frequencies: 784 Hz (G5) + 1046.5 Hz (C6) + 1318.5 Hz harmonic
+      // Resonant dual-tone bell frequencies: 853 Hz + 960 Hz (standard loud ringer) + 1200 Hz harmonic
       const tone1 = ctx.createOscillator();
       tone1.type = 'sine';
-      tone1.frequency.setValueAtTime(784, now);
+      tone1.frequency.setValueAtTime(853, now);
 
       const tone2 = ctx.createOscillator();
       tone2.type = 'triangle'; // Gives metallic chime harmonics
-      tone2.frequency.setValueAtTime(1046.5, now);
+      tone2.frequency.setValueAtTime(960, now);
 
       const tone3 = ctx.createOscillator();
       tone3.type = 'sine';
-      tone3.frequency.setValueAtTime(1318.5, now);
+      tone3.frequency.setValueAtTime(1200, now);
 
-      // Tremolo / mechanical bell cadence modulator: 22Hz oscillation
+      // Tremolo: 20Hz amplitude modulator for mechanical bell clapper cadence
       const tremoloOsc = ctx.createOscillator();
-      tremoloOsc.frequency.setValueAtTime(22, now);
+      tremoloOsc.frequency.setValueAtTime(20, now);
       const tremoloGain = ctx.createGain();
-      tremoloGain.gain.setValueAtTime(0.3, now);
-      tremoloOsc.connect(tremoloGain.gain);
+      tremoloGain.gain.setValueAtTime(0.25, now);
+      tremoloOsc.connect(tremoloGain);
 
       // Cadence gain: ring burst pattern across exactly 5.0 seconds:
       // Burst 1: 0.0s to 1.8s (ring)
@@ -151,26 +151,42 @@ class SoundManager {
 
       // Burst 1
       cadenceGain.gain.setValueAtTime(0, now);
-      cadenceGain.gain.linearRampToValueAtTime(1.0, now + 0.04);
-      cadenceGain.gain.setValueAtTime(1.0, now + 1.76);
+      cadenceGain.gain.linearRampToValueAtTime(0.9, now + 0.04);
+      cadenceGain.gain.setValueAtTime(0.9, now + 1.76);
       cadenceGain.gain.linearRampToValueAtTime(0, now + 1.80);
 
       // Burst 2
       cadenceGain.gain.setValueAtTime(0, now + 2.16);
-      cadenceGain.gain.linearRampToValueAtTime(1.0, now + 2.20);
-      cadenceGain.gain.setValueAtTime(1.0, now + 3.96);
+      cadenceGain.gain.linearRampToValueAtTime(0.9, now + 2.20);
+      cadenceGain.gain.setValueAtTime(0.9, now + 3.96);
       cadenceGain.gain.linearRampToValueAtTime(0, now + 4.00);
 
       // Burst 3 (stops cleanly at 5.00s)
       cadenceGain.gain.setValueAtTime(0, now + 4.26);
-      cadenceGain.gain.linearRampToValueAtTime(1.0, now + 4.30);
-      cadenceGain.gain.setValueAtTime(1.0, now + 4.96);
+      cadenceGain.gain.linearRampToValueAtTime(0.9, now + 4.30);
+      cadenceGain.gain.setValueAtTime(0.9, now + 4.96);
       cadenceGain.gain.linearRampToValueAtTime(0, now + 5.00);
 
-      // Connect graph
-      tone1.connect(cadenceGain);
-      tone2.connect(cadenceGain);
-      tone3.connect(cadenceGain);
+      // Individual tone gain balancing
+      const g1 = ctx.createGain();
+      g1.gain.setValueAtTime(0.38, now);
+      tone1.connect(g1);
+      g1.connect(cadenceGain);
+
+      const g2 = ctx.createGain();
+      g2.gain.setValueAtTime(0.38, now);
+      tone2.connect(g2);
+      g2.connect(cadenceGain);
+
+      const g3 = ctx.createGain();
+      g3.gain.setValueAtTime(0.24, now);
+      tone3.connect(g3);
+      g3.connect(cadenceGain);
+
+      // Apply tremolo to cadence gain
+      tremoloGain.connect(cadenceGain.gain);
+
+      // Connect to master
       cadenceGain.connect(masterGain);
 
       // Hardware timing schedule
@@ -184,7 +200,7 @@ class SoundManager {
       tone2.stop(now + duration);
       tone3.stop(now + duration);
 
-      this.activeRingNodes = [tremoloOsc, tone1, tone2, tone3, cadenceGain, masterGain];
+      this.activeRingNodes = [tremoloOsc, tone1, tone2, tone3, tremoloGain, g1, g2, g3, cadenceGain, masterGain];
       this.setRinging(true);
 
       // Cleanup when 5.0 seconds expire
