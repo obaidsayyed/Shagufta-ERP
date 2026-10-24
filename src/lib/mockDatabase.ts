@@ -100,6 +100,27 @@ class MockDatabase {
     this.emit('DATABASE_RESET', {});
   }
 
+  public clearAllMockData() {
+    this.staffProfiles = [];
+    this.menuCategories = [];
+    this.menuItems = [];
+    this.tables = [];
+    this.tableSessions = [];
+    this.parcelOrders = [];
+    this.orders = [];
+    this.orderItems = [];
+    this.bills = [];
+    this.billAdjustments = [];
+    this.auditLogs = [];
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('hotel_erp_mock_db');
+      }
+    } catch {
+      // Ignore
+    }
+  }
+
   private seedDefaults() {
     const now = new Date().toISOString();
 

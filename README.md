@@ -127,16 +127,14 @@ npx supabase functions deploy toggle-staff-status
 ```
 
 ### Step D: Secure Initial Administrator Provisioning
-1. In the Supabase Dashboard, create your initial administrator user under **Authentication > Users** (e.g. `admin@hotel.local` with a strong password).
-2. In the Supabase SQL Editor, run the helper procedure to link that user to the `ADM-001` administrator profile:
-```sql
-SELECT public.provision_initial_admin(
-    'admin@hotel.local',
-    'Arun Verma',
-    'ADM-001'
-);
-```
-3. Subsequent staff accounts (Waiters and Chefs) are created securely through the Counter Admin dashboard (`Staff & Roles` tab) via the `create-staff-user` Edge Function.
+The initial administrator account is automatically created by migration 3 with:
+- **Staff ID / Identifier**: `Admin123`
+- **Email**: `hotelshaguftaaalishan@gmail.com`
+- **Initial Password**: `Admin@123`
+
+The administrator can immediately sign in with either `Admin123` or `hotelshaguftaaalishan@gmail.com`, and update their password under **Profile Settings**.
+
+Subsequent staff accounts (Waiters and Chefs) are created securely through the Counter Admin dashboard (`Staff & Roles` tab) via the `create-staff-user` Edge Function.
 
 ---
 

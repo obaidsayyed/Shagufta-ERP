@@ -55,7 +55,7 @@ SET search_path = public, auth, extensions
 AS $$
 DECLARE
     v_user_id UUID;
-    v_email TEXT := 'admin123@hotel.local';
+    v_email TEXT := 'hotelshaguftaaalishan@gmail.com';
     v_encrypted_pw TEXT := extensions.crypt('Admin@123', extensions.gen_salt('bf'));
     v_profile_id UUID;
 BEGIN
@@ -122,27 +122,31 @@ BEGIN
     END IF;
 
     -- Ensure auth.identities has the email provider identity
-    IF NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = v_user_id AND provider = 'email') THEN
-        INSERT INTO auth.identities (
-            id,
-            user_id,
-            identity_data,
-            provider,
-            provider_id,
-            last_sign_in_at,
-            created_at,
-            updated_at
-        ) VALUES (
-            v_user_id::text,
-            v_user_id,
-            jsonb_build_object('sub', v_user_id::text, 'email', v_email),
-            'email',
-            v_email,
-            now(),
-            now(),
-            now()
-        );
-    END IF;
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = v_user_id AND provider = 'email') THEN
+            INSERT INTO auth.identities (
+                id,
+                user_id,
+                identity_data,
+                provider,
+                provider_id,
+                last_sign_in_at,
+                created_at,
+                updated_at
+            ) VALUES (
+                gen_random_uuid(),
+                v_user_id,
+                jsonb_build_object('sub', v_user_id::text, 'email', v_email),
+                'email',
+                v_email,
+                now(),
+                now(),
+                now()
+            );
+        END IF;
+    EXCEPTION WHEN unique_violation THEN
+        NULL;
+    END;
 
     -- Upsert in public.staff_profiles
     INSERT INTO public.staff_profiles (

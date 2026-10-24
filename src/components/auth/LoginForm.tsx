@@ -115,11 +115,11 @@ export const LoginForm: React.FC = () => {
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '14px' }}>
-            <label htmlFor="login-identifier">Staff ID or Email</label>
+            <label htmlFor="login-identifier">Email</label>
             <input
               id="login-identifier"
               type="text"
-              placeholder="e.g. Admin123 or staff@hotel.com"
+              placeholder="e.g. staff@hotel.com"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               required

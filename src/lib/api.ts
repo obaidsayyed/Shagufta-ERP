@@ -28,6 +28,11 @@ import { mockDb } from './mockDatabase';
 
 const useLiveSupabase = isSupabaseConfigured && import.meta.env.VITE_APP_DATA_SOURCE === 'supabase';
 
+// If connected to live Supabase, purge any cached mock state so database is 100% authoritative
+if (useLiveSupabase) {
+  mockDb.clearAllMockData();
+}
+
 function logApiNotice(operation: string, err: unknown) {
   console.warn(`[Hotel ERP Resilience] ${operation} Supabase notice:`, err instanceof Error ? err.message : err);
 }
@@ -344,17 +349,10 @@ export const api = {
 
   async createTable(table_number: string): Promise<DiningTable> {
     const cleanNum = table_number.trim().toUpperCase();
-    const existing = mockDb.getTables().find((t) => t.table_number.toLowerCase() === cleanNum.toLowerCase());
-    if (existing) {
-      if (!existing.is_active) {
-        return mockDb.toggleTableActive(existing.id, true);
-      }
-      throw new Error(`Table "${cleanNum}" already exists.`);
-    }
 
     if (useLiveSupabase && supabase) {
       try {
-        const { data, error } = await supabase.from('tables').insert({ table_number: cleanNum }).select().single();
+        const { data, error } = await supabase.from('tables').insert({ table_number: cleanNum, is_active: true }).select().single();
         if (!error && data) {
           mockDb.syncTables([data as DiningTable]);
           if (!cleanNum.includes('(2)')) {
@@ -374,15 +372,25 @@ export const api = {
           if (error.code === '23505' || error.message?.includes('already exists') || error.message?.includes('duplicate')) {
             throw new Error(`Table "${cleanNum}" already exists.`);
           }
-          logApiNotice('createTable', error.message);
+          throw new Error(error.message || `Failed to create table "${cleanNum}".`);
         }
       } catch (err) {
-        if (err instanceof Error && err.message.includes('already exists')) {
+        if (err instanceof Error) {
           throw err;
         }
         logApiNotice('createTable fallback', err);
       }
     }
+
+    // Offline / Demo fallback: only checked when Supabase is not configured
+    const existing = mockDb.getTables().find((t) => t.table_number.toLowerCase() === cleanNum.toLowerCase());
+    if (existing) {
+      if (!existing.is_active) {
+        return mockDb.toggleTableActive(existing.id, true);
+      }
+      throw new Error(`Table "${cleanNum}" already exists.`);
+    }
+
     const created = mockDb.createTable(cleanNum);
     if (!cleanNum.includes('(2)')) {
       mockDb.createTable(`${cleanNum} (2)`);
