@@ -8,6 +8,10 @@
   "background_color": "#F9EBD7",
   "theme_color": "#046A38",
   "description": "Hotel Shagufta POS & Restaurant Management System",
+  "developer": {
+    "name": "Obaid Sayyed",
+    "organization": "OBAID: Optima Beyond AI Developers"
+  },
   "orientation": "any",
   "categories": ["business", "food", "productivity"],
   "icons": [

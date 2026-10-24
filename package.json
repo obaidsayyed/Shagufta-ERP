@@ -2,6 +2,8 @@
   "name": "erp",
   "private": true,
   "version": "0.0.0",
+  "author": "Obaid Sayyed",
+  "organization": "OBAID: Optima Beyond AI Developers",
   "type": "module",
   "scripts": {
     "dev": "vite",
