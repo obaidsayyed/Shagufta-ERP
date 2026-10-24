@@ -50,7 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
 
         <span style={{ fontWeight: 800, fontSize: '14.5px', letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
-          HOTEL ERP
+          Hotel Shagufta POS
         </span>
       </div>
 

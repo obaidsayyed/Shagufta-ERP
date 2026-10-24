@@ -256,7 +256,7 @@ export const KitchenView: React.FC = () => {
               onClick={handleTestRing}
               title="Test the 5-second kitchen ringtone"
             >
-              Test Ring (5s)
+              Test
             </button>
           </div>
         </div>

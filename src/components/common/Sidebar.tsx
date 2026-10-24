@@ -57,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }}
           >
             <span style={{ fontWeight: 800, fontSize: '13.5px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
-              HOTEL ERP
+              Hotel Shagufta POS
             </span>
 
             {/* Close button visible when sidebar is open in mobile view */}
