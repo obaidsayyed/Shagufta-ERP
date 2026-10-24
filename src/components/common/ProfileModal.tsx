@@ -85,7 +85,20 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     <div className="modal-overlay">
       <div className="modal-content" style={{ maxWidth: '440px' }}>
         <div className="modal-header">
-          <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>Staff Profile Settings</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img
+              src="/hotel%20logo.png"
+              alt="Hotel Shagufta"
+              style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '1px solid rgba(234, 179, 8, 0.45)',
+              }}
+            />
+            <h3 style={{ color: 'var(--text-primary)', margin: 0, fontSize: '14.5px' }}>Staff Profile Settings</h3>
+          </div>
           <button type="button" className="btn-secondary btn-sm" onClick={onClose} style={{ padding: '2px 8px', fontSize: '11px' }}>
             Close
           </button>

@@ -100,7 +100,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const title = `🚨 NEW KITCHEN ORDER: ${ticketNumber || 'Ticket'}`;
         const notif = new Notification(title, {
           body: 'A new order was just sent to the kitchen queue.',
-          icon: '/favicon.svg',
+          icon: '/hotel%20logo.png',
           tag: 'kitchen-new-order',
           requireInteraction: true,
         });

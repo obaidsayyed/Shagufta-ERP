@@ -56,9 +56,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
               borderBottom: '1px solid var(--border-subtle)',
             }}
           >
-            <span style={{ fontWeight: 800, fontSize: '13.5px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
-              Hotel Shagufta POS
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+              <img
+                src="/hotel%20logo.png"
+                alt="Hotel Shagufta Logo"
+                style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '1.5px solid rgba(234, 179, 8, 0.45)',
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ fontWeight: 800, fontSize: '13px', letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Hotel Shagufta POS
+              </span>
+            </div>
 
             {/* Close button visible when sidebar is open in mobile view */}
             <button

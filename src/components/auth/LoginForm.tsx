@@ -84,7 +84,21 @@ export const LoginForm: React.FC = () => {
           borderRadius: '8px',
         }}
       >
-        <div style={{ marginBottom: '18px', textAlign: 'center' }}>
+        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+          <img
+            src="/hotel%20logo.png"
+            alt="Hotel Shagufta Logo"
+            style={{
+              width: '74px',
+              height: '74px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              margin: '0 auto 12px auto',
+              display: 'block',
+              border: '2px solid rgba(234, 179, 8, 0.55)',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.35)',
+            }}
+          />
           <h1 style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
             Hotel Shagufta POS 
           </h1>

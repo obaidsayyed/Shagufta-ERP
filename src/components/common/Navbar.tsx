@@ -49,6 +49,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         )}
 
+        <img
+          src="/hotel%20logo.png"
+          alt="Hotel Shagufta Logo"
+          style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '1.5px solid rgba(234, 179, 8, 0.45)',
+            boxShadow: '0 1px 4px rgba(0, 0, 0, 0.35)',
+            flexShrink: 0,
+          }}
+        />
+
         <span style={{ fontWeight: 800, fontSize: '14.5px', letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
           Hotel Shagufta POS
         </span>
