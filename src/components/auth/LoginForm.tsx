@@ -86,7 +86,7 @@ export const LoginForm: React.FC = () => {
       >
         <div style={{ marginBottom: '18px', textAlign: 'center' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
-            Hotel Operations Terminal
+            Hotel Shagufta POS 
           </h1>
           <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '3px' }}>
             Authorized Counter, Waiter & Kitchen Staff Login
