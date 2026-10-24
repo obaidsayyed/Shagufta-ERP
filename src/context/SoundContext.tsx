@@ -37,6 +37,20 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setIsRinging(ringing);
     });
 
+    // If background permission was previously granted, auto-resume keep-alive carrier on first user interaction
+    const isBgGranted = typeof localStorage !== 'undefined' && localStorage.getItem('shagufta_bg_permission_granted') === 'true';
+    if (isBgGranted) {
+      const autoResume = async () => {
+        const ok = await kitchenSound.unlockAudio();
+        if (ok) {
+          setAudioUnlocked(true);
+          await kitchenSound.startKitchenBackgroundKeepAlive();
+        }
+      };
+      window.addEventListener('pointerdown', autoResume, { once: true });
+      window.addEventListener('keydown', autoResume, { once: true });
+    }
+
     return () => unsub();
   }, []);
 

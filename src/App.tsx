@@ -8,6 +8,8 @@ import { LoginForm } from './components/auth/LoginForm';
 import { WaiterView } from './components/waiter/WaiterView';
 import { KitchenView } from './components/kitchen/KitchenView';
 import { CounterView } from './components/counter/CounterView';
+import { PwaInstallPrompt } from './components/common/PwaInstallPrompt';
+import { BackgroundPermissionPrompt } from './components/common/BackgroundPermissionPrompt';
 
 const MainApp: React.FC = () => {
   const { currentStaff, role, isAuthenticated } = useAuth();
@@ -83,6 +85,8 @@ export function App() {
     <AuthProvider>
       <SoundProvider>
         <MainApp />
+        <BackgroundPermissionPrompt />
+        <PwaInstallPrompt />
       </SoundProvider>
     </AuthProvider>
   );
